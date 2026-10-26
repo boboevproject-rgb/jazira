@@ -11,8 +11,8 @@ const CONFIG = {
   // Ссылка на установщик и номер версии. Пока ссылки нет, сайт работает как лист ожидания.
   downloadUrl: "",
   version: "",
-  // Telegram-канал или чат (необязательно), например "https://t.me/jazira_app".
-  telegram: ""
+  // Telegram для связи — ссылка в подвале (пусто — ссылка скрыта).
+  telegram: "https://t.me/bilol_bj"
 };
 
 const LANGS = ["ru", "en", "tg"];
