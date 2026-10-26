@@ -8,6 +8,8 @@
 
 Статический сайт без сборки и без зависимостей: HTML + CSS + JS. Лицензия — [MIT](LICENSE).
 
+**Сайт онлайн: https://boboevproject-rgb.github.io/jazira/**
+
 ![Jazira](assets/og.png)
 
 ## Скачать и запустить
@@ -74,13 +76,17 @@ python tools/render_assets.py       # пересобрать icon-*.png и og.pn
 
 ## Опубликовать в интернете
 
-Это обычные статические файлы — подойдёт любой хостинг:
+Этот репозиторий уже опубликован через GitHub Pages из ветки `main`: каждый пуш обновляет сайт
+через минуту-две. Файл `.nojekyll` отключает обработку Jekyll — файлы отдаются как есть.
+
+Своя копия — это обычные статические файлы, подойдёт любой хостинг:
 
 - **GitHub Pages:** Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)`.
   Сайт появится по адресу `https://<ваш-логин>.github.io/jazira/`.
 - **Netlify, Cloudflare Pages, свой nginx** — просто выложите папку целиком.
 
-После публикации замените в `index.html` `og:image` на полный адрес картинки (`https://<домен>/assets/og.png`).
+В своей копии замените в `index.html` адрес в `og:url`, `og:image` и `canonical` на свой —
+иначе превью в соцсетях будет вести на этот сайт.
 
 ## Лицензия
 
@@ -97,6 +103,8 @@ python tools/render_assets.py       # пересобрать icon-*.png и og.pn
 "island" for music, lyrics, a focus timer, water reminders, a file shelf and tasks. Until the app
 ships, the site collects a waitlist. Languages: Russian, English, Tajik. Plain HTML + CSS + JS,
 no build step, no dependencies. Licensed under [MIT](LICENSE).
+
+**Live site: https://boboevproject-rgb.github.io/jazira/**
 
 ### Quick start
 
@@ -120,4 +128,5 @@ set `TG_TOKEN` / `TG_CHAT` script properties, deploy as a web app with access fo
 ### Deploy
 
 Any static hosting works: GitHub Pages (Settings → Pages → deploy from `main` / root), Netlify,
-Cloudflare Pages or your own nginx. Replace the relative `og:image` in `index.html` with an absolute URL.
+Cloudflare Pages or your own nginx. In your copy, point `og:url`, `og:image` and `canonical` in
+`index.html` at your own address, otherwise social previews will link back to this site.
