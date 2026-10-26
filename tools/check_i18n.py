@@ -77,6 +77,7 @@ def main():
     T = load_dict()
     main_js = (ROOT / "assets" / "main.js").read_text(encoding="utf-8")
     cfg = {k: (re.search(rf'{k}:\s*"([^"]*)"', main_js) or [None, ""])[1] for k in ("brand", "author", "version")}
+    cfg["early"] = (re.search(r'earlyVersion:\s*"([^"]*)"', main_js) or [None, ""])[1]
     page = Page()
     page.feed((ROOT / "index.html").read_text(encoding="utf-8"))
     errors, warnings = [], []

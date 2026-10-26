@@ -12,6 +12,7 @@
 
 **Само приложение для Windows** (версия 0.1: музыка, таймер фокуса, вода, уведомления) — в папке
 [`app/`](app/README.md): исходники, сборка, установка.
+Скачать: **[Jazira 0.1.0 — ранняя версия](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
 
 ![Jazira](assets/og.png)
 
@@ -110,7 +111,7 @@ ships, the site collects a waitlist. Languages: Russian, English, Tajik. Plain H
 no build step, no dependencies. Licensed under [MIT](LICENSE).
 
 **Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** (v0.1) lives in
-[`app/`](app/README.md).
+[`app/`](app/README.md). Download: **[v0.1.0 early release](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
 
 ### Quick start
 

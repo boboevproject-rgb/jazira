@@ -11,12 +11,15 @@ const CONFIG = {
   // Ссылка на установщик и номер версии. Пока ссылки нет, сайт работает как лист ожидания.
   downloadUrl: "",
   version: "",
+  // Ранняя версия для пробы, пока полной нет: ссылка под формами листа ожидания (пусто — скрыта).
+  earlyUrl: "https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0",
+  earlyVersion: "0.1",
   // Telegram для связи — ссылка в подвале (пусто — ссылка скрыта).
   telegram: "https://t.me/bilol_bj"
 };
 
 const LANGS = ["ru", "en", "tg"];
-const VARS = { brand: CONFIG.brand, author: CONFIG.author, version: CONFIG.version };
+const VARS = { brand: CONFIG.brand, author: CONFIG.author, version: CONFIG.version, early: CONFIG.earlyVersion };
 let LANG = "ru";
 
 const store = {
@@ -76,6 +79,10 @@ document.querySelectorAll(".js-dl").forEach(a => { a.href = CONFIG.downloadUrl |
 document.querySelectorAll(".js-brand").forEach(e => { e.textContent = CONFIG.brand; });
 document.querySelectorAll(".js-year").forEach(e => { e.textContent = new Date().getFullYear(); });
 if (CONFIG.telegram) document.querySelectorAll(".js-tg").forEach(a => { a.href = CONFIG.telegram; a.hidden = false; });
+if (CONFIG.earlyUrl && !CONFIG.downloadUrl) document.querySelectorAll(".js-early").forEach(p => {
+  p.querySelector("a").href = CONFIG.earlyUrl;
+  p.hidden = false;
+});
 
 applyLang(startLang());
 

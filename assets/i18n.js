@@ -52,6 +52,12 @@ const T = {
 "form.sending": {"ru": "Отправляем…", "en": "Sending…", "tg": "Фиристода истодаем…"},
 "form.fail": {"ru": "Не получилось отправить. Попробуйте ещё раз чуть позже.", "en": "Couldn't send. Please try again in a moment.", "tg": "Фиристода нашуд. Лутфан каме баъд боз кӯшиш кунед."},
 "form.off": {"ru": "Форма ещё не подключена.", "en": "The form isn't connected yet.", "tg": "Форма ҳоло пайваст нашудааст."},
+"early.link": {"ru": "Попробовать раннюю версию {early}", "en": "Try the early version {early}", "tg": "Версияи ибтидоии {early}-ро санҷед"},
+"early.note": {
+  "ru": "Уже работают музыка, таймер фокуса и вода — остальное в следующих версиях.",
+  "en": "Music, the focus timer and water already work; the rest is on the way.",
+  "tg": "Мусиқӣ, таймери тамаркуз ва об аллакай кор мекунанд — боқимонда дар версияҳои оянда."
+},
 
 "demo.label": {"ru": "Демо острова {brand}", "en": "{brand} island demo", "tg": "Намоиши ҷазираи {brand}"},
 "demo.chips": {"ru": "Состояния острова", "en": "Island states", "tg": "Ҳолатҳои ҷазира"},
@@ -172,9 +178,9 @@ const T = {
 "faq.title": {"ru": "Вопросы", "en": "Questions", "tg": "Саволҳо"},
 "faq.q1": {"ru": "Когда выйдет {brand}?", "en": "When is {brand} coming out?", "tg": "{brand} кай мебарояд?"},
 "faq.a1": {
-  "ru": "Мы собираем первую версию. Запишитесь в лист ожидания — напишем в тот же день, когда она будет готова.",
-  "en": "We're building the first version now. Join the waitlist and we'll write the day it's ready.",
-  "tg": "Мо ҳоло версияи аввалро месозем. Ба рӯйхати интизорӣ номнавис шавед — ҳамон рӯзе, ки тайёр шуд, менависем."
+  "ru": "Ранняя версия {early} уже доступна для пробы — ссылка на первом экране. Полную версию пришлём всем из листа ожидания в день выхода.",
+  "en": "Early version {early} is already out to try — the link is at the top of the page. We'll send the full version to everyone on the waitlist on launch day.",
+  "tg": "Версияи ибтидоии {early} аллакай барои санҷиш дастрас аст — пайванд дар экрани аввал. Версияи пурраро дар рӯзи баромад ба ҳамаи аъзои рӯйхати интизорӣ мефиристем."
 },
 "faq.q2": {"ru": "Сколько это будет стоить?", "en": "How much will it cost?", "tg": "Нархаш чанд мешавад?"},
 "faq.a2": {

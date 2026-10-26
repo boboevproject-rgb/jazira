@@ -117,6 +117,13 @@ h1 { margin: 22px 0 0; font: 700 clamp(30px, 3.9vw, 48px)/1.1 var(--display); le
 .wl-done::before { content: ""; position: absolute; left: 18px; top: 50%; width: 16px; height: 9px; margin-top: -7px; border: solid currentColor; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); }
 .wl.joined .wl-row, .wl.joined .wl-note, .wl.joined .wl-msg { display: none; }
 .wl.joined .wl-done { display: block; }
+
+/* Ссылка на раннюю версию под формой листа ожидания */
+.early { margin: 16px 6px 0; font-size: 15px; }
+.early a { color: var(--sand); font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(244, 219, 166, .35); transition: border-color .2s; }
+.early a:hover { border-color: var(--sand); }
+.early-note { display: block; margin-top: 4px; color: var(--mist); font-size: 13px; }
+.horizon .early { text-align: center; }
 @media (max-width: 480px) {
   .wl-row { flex-direction: column; border-radius: 24px; padding: 8px; }
   .wl-row input { text-align: center; }

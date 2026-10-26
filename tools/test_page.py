@@ -24,7 +24,7 @@ problems = []
 
 
 def text(key, lang):
-    return T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol")
+    return T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol").replace("{early}", "0.1")
 
 
 def expect(ok, what):
@@ -98,6 +98,10 @@ def main():
         page = ctx.new_page()
         page.goto(f"{base}/?lang=ru")
         page.wait_for_load_state("networkidle")
+
+        early = page.locator(".js-early a")
+        expect(early.count() == 2 and early.first.is_visible() and "/releases/" in (early.first.get_attribute("href") or ""),
+               "ранняя версия: ссылки под обеими формами ведут на релиз")
 
         idle_w = page.eval_on_selector("#island", "e => e.getBoundingClientRect().width")
         page.click(".chips button[data-s=music]")

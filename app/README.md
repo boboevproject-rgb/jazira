@@ -22,7 +22,7 @@
 
 ## Установка
 
-1. Скачайте `Jazira-0.1.0-win-x64.zip` и распакуйте.
+1. Скачайте `Jazira-0.1.0-win-x64.zip` со [страницы релиза](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0) и распакуйте.
 2. Запустите `install.bat` — права администратора не нужны. Jazira встанет в
    `%LOCALAPPDATA%\Programs\Jazira`, появятся ярлыки в «Пуске» и на рабочем столе.
 3. Windows может предупредить «Защитник Windows предотвратил запуск» — приложение пока без цифровой
@@ -87,7 +87,7 @@ Windows can see), a 25/5 focus timer and a daily water counter with hourly remin
 short notifications for the charger, track changes, water and the end of a focus session.
 Tray menu: show/hide, start with Windows, water goal, language (RU/EN/TJ), exit.
 
-**Install:** unzip `Jazira-0.1.0-win-x64.zip` and run `install.bat` (no admin rights). The app is not
+**Install:** download `Jazira-0.1.0-win-x64.zip` from the [release page](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0), unzip it and run `install.bat` (no admin rights). The app is not
 code-signed yet, so SmartScreen may warn you: *More info → Run anyway*. `uninstall.bat` removes it.
 
 **Build:** .NET 9 SDK, `dotnet build Jazira/Jazira.csproj -c Release`; see the publish command above for
