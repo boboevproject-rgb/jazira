@@ -22,10 +22,12 @@
    ```
 2. **Запустить** — любой способ:
    - **Windows:** дважды щёлкните `start.bat` — откроется http://localhost:8791/.
-     Нужен [Python 3.8+](https://www.python.org/downloads/).
+     Нужен [Python 3.8+](https://www.python.org/downloads/) — если его нет, `start.bat` сам откроет страницу загрузки.
+     Ярлык «Jazira» на рабочем столе: дважды щёлкните `create-shortcut.bat`.
    - **Любая система:** `python tools/serve.py` (или `python3 tools/serve.py`) и откройте http://localhost:8791/.
    - **Просто посмотреть:** откройте `index.html` в браузере. Работает всё, кроме отправки форм.
 3. **Сделать своим** — см. «Настройки» ниже: название, автор, Telegram, адрес формы — в одном месте.
+4. **Обновить** до свежей версии: `git pull` в папке проекта (если скачивали через git) или скачайте ZIP заново.
 
 На локальном сервере заявки из форм сохраняются в `dev-submissions.jsonl` (файл в git не попадает).
 
@@ -111,9 +113,9 @@ no build step, no dependencies. Licensed under [MIT](LICENSE).
 1. **Download** — **Code → Download ZIP** on the repository page
    ([direct link](https://github.com/boboevproject-rgb/jazira/archive/refs/heads/main.zip)), or
    `git clone https://github.com/boboevproject-rgb/jazira.git`.
-2. **Run** — on Windows double-click `start.bat`; anywhere else run `python tools/serve.py`
-   (Python 3.8+) and open http://localhost:8791/. To just look around, open `index.html` in a browser
-   (everything except form submission works).
+2. **Run** — on Windows double-click `start.bat` (and `create-shortcut.bat` for a desktop shortcut);
+   anywhere else run `python tools/serve.py` (Python 3.8+) and open http://localhost:8791/. To just look
+   around, open `index.html` in a browser (everything except form submission works).
 3. **Make it yours** — edit the `CONFIG` block at the top of `assets/main.js` (product name, author,
    Telegram link, form URL, download URL). Texts live in `assets/i18n.js`, the icon in `assets/icon.svg`.
 

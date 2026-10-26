@@ -1,4 +1,5 @@
-"""Собирает PNG из исходников: иконки 64/192/512 из assets/icon.svg и og.png из tools/og.html.
+"""Собирает PNG из исходников: иконки 64/192/512 из assets/icon.svg и og.png из tools/og.html,
+плюс icon.ico для ярлыка Windows (create-shortcut.bat).
 
 Запуск: python tools/render_assets.py   (нужен Playwright; браузер — установленный Chrome или Edge)
 """
@@ -42,6 +43,15 @@ def main():
         page.screenshot(path=str(ASSETS / "og.png"))
         print("og.png")
         browser.close()
+    make_ico()
+
+
+def make_ico():
+    """icon.ico из icon-512.png — Windows берёт нужный размер сам."""
+    from PIL import Image
+    sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+    Image.open(ASSETS / "icon-512.png").save(ASSETS / "icon.ico", sizes=sizes)
+    print("icon.ico")
 
 
 if __name__ == "__main__":

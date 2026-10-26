@@ -77,7 +77,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8791
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    try:
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    except OSError:
+        print(f"Порт {port} уже занят — скорее всего, сайт уже открыт в другом окне: http://localhost:{port}/")
+        print(f"Запустить на другом порту: python tools/serve.py {port + 1}")
+        sys.exit(1)
     print(f"Jazira: http://localhost:{port}/  (Ctrl+C или закрыть окно — остановить)", flush=True)
     try:
         server.serve_forever()
