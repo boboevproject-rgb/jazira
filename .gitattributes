@@ -1,0 +1,6 @@
+# Командные файлы Windows — всегда с CRLF, иначе cmd может неверно прочитать переносы строк (^)
+*.bat text eol=crlf
+# Остальной текст — LF
+* text=auto
+*.png binary
+*.ico binary
