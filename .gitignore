@@ -3,3 +3,8 @@ dev-submissions.jsonl
 # Скриншоты проверки (tools/test_page.py)
 shots/
 __pycache__/
+# Сборка приложения
+app/**/bin/
+app/**/obj/
+app/publish/
+app/dist/

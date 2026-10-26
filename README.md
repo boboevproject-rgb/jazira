@@ -10,6 +10,9 @@
 
 **Сайт онлайн: https://boboevproject-rgb.github.io/jazira/**
 
+**Само приложение для Windows** (версия 0.1: музыка, таймер фокуса, вода, уведомления) — в папке
+[`app/`](app/README.md): исходники, сборка, установка.
+
 ![Jazira](assets/og.png)
 
 ## Скачать и запустить
@@ -106,7 +109,8 @@ python tools/render_assets.py       # пересобрать icon-*.png и og.pn
 ships, the site collects a waitlist. Languages: Russian, English, Tajik. Plain HTML + CSS + JS,
 no build step, no dependencies. Licensed under [MIT](LICENSE).
 
-**Live site: https://boboevproject-rgb.github.io/jazira/**
+**Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** (v0.1) lives in
+[`app/`](app/README.md).
 
 ### Quick start
 

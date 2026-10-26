@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- 10.0.19041 — для системного медиа-пульта Windows (что играет, пауза, перемотка) -->
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WPF и WinForms вместе: без неявных using, иначе типы вроде Application конфликтуют -->
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Jazira</AssemblyName>
+    <RootNamespace>Jazira</RootNamespace>
+    <ApplicationIcon>..\..\assets\icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>0.1.0</Version>
+    <Product>Jazira</Product>
+    <Company>Bilol</Company>
+    <Copyright>© 2026 Bilol · MIT</Copyright>
+    <Description>Jazira — маленький остров наверху экрана Windows</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="..\..\assets\icon.ico" Link="Assets\jazira.ico" />
+  </ItemGroup>
+
+</Project>
