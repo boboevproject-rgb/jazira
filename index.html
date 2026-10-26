@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jazira — маленький остров наверху экрана Windows</title>
+<meta name="description" content="Jazira превращает верхний край экрана Windows в живой остров: музыка, тексты песен, таймер фокуса, вода, файлы и задачи — всё на расстоянии одного взгляда.">
+<meta name="author" content="Bilol">
+<meta name="theme-color" content="#061016">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jazira">
+<meta property="og:title" content="Jazira — маленький остров наверху экрана Windows">
+<meta property="og:description" content="Музыка, тексты песен, таймер фокуса, вода и файлы — в маленьком острове у верхнего края Windows.">
+<!-- При публикации замените на абсолютный адрес: https://<домен>/assets/og.png -->
+<meta property="og:image" content="assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icon-64.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400..700&family=Unbounded:wght@500..800&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/i18n.js" defer></script>
+<script src="assets/main.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main" data-t="a11y.skip">Перейти к содержанию</a>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="#main">
+      <svg class="logo-mark" viewBox="0 0 40 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="lgRim" x1="0" x2="1"><stop offset="0" stop-color="#2fd4b8"/><stop offset="1" stop-color="#ffb15c"/></linearGradient>
+          <linearGradient id="lgSun" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0a3"/><stop offset="1" stop-color="#ff8a4c"/></linearGradient>
+        </defs>
+        <rect x=".75" y=".75" width="38.5" height="22.5" rx="11.25" fill="#020507" stroke="url(#lgRim)" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="4.5" fill="url(#lgSun)"/>
+        <path d="M20 13.2c1.5-1.9 3-1.9 4.5 0s3 1.9 4.5 0" fill="none" stroke="#2fd4b8" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="js-brand">Jazira</span>
+    </a>
+    <nav class="nav" aria-label="Главное меню" data-t-attr="aria-label:nav.label">
+      <a href="#features" data-t="nav.features">Возможности</a>
+      <a href="#principles" data-t="nav.principles">Принципы</a>
+      <a href="#faq" data-t="nav.faq">Вопросы</a>
+    </nav>
+    <div class="top-r">
+      <div class="lang" role="group" aria-label="Язык" data-t-attr="aria-label:lang.label">
+        <i class="lang-thumb" aria-hidden="true"></i>
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="tg" aria-pressed="false">TJ</button>
+      </div>
+      <a class="btn btn-sm top-cta wl-only" href="#waitlist" data-t="nav.join">Записаться</a>
+      <a class="btn btn-sm top-cta live-only js-dl" href="#waitlist" data-t="nav.download">Скачать</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= Первый экран ================= -->
+  <section class="hero">
+    <div class="wrap hero-in">
+      <div class="hero-text">
+        <span class="badge"><i class="dot" aria-hidden="true"></i><span class="wl-only" data-t="hero.badge">Скоро для Windows 10 и 11</span><span class="live-only" data-t="hero.badge.live">Уже доступно для Windows 10 и 11</span></span>
+        <h1 data-t="hero.title">Остров наверху вашего экрана</h1>
+        <p class="lede" data-t="hero.lede">Jazira живёт у верхнего края Windows. Наведите курсор — остров раскроется и покажет музыку, таймер, напоминания и файлы. Уберите — и он снова станет тихой полоской.</p>
+
+        <form class="wl wl-only js-wl" novalidate>
+          <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          <div class="wl-row">
+            <input type="text" name="contact" maxlength="120" autocomplete="email" required placeholder="Email или Telegram" aria-label="Ваш email или Telegram" data-t-attr="placeholder:wl.ph;aria-label:wl.label">
+            <button class="btn" type="submit" data-t="wl.submit">Записаться</button>
+          </div>
+          <p class="wl-done" role="status" data-t="wl.done">Готово! Вы в списке — напишем, как только Jazira выйдет.</p>
+          <p class="wl-msg" aria-live="polite"></p>
+          <p class="wl-note" data-t="wl.note">Напишем один раз — в день выхода. Без рассылок.</p>
+        </form>
+
+        <div class="cta live-only">
+          <a class="btn js-dl" href="#waitlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg><span data-t="hero.download">Скачать для Windows</span></a>
+          <small data-t="hero.version">Версия</small>
+        </div>
+      </div>
+
+      <!-- Демо: экран с островом, который сам переключает состояния -->
+      <figure class="demo">
+        <div class="screen" role="img" aria-label="Демо острова Jazira" data-t-attr="aria-label:demo.label">
+          <div class="wall" aria-hidden="true"><i class="sky"></i><i class="sun"></i><i class="sea"></i></div>
+
+          <div class="island" id="island" data-state="idle" aria-hidden="true">
+            <div class="st st-idle">
+              <b class="js-clock">18:55</b>
+              <svg class="wave" viewBox="0 0 24 12"><path d="M-12 6q3-5 6 0t6 0t6 0t6 0t6 0t6 0"/></svg>
+            </div>
+
+            <div class="st st-music">
+              <span class="cover"><svg viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg></span>
+              <span class="meta"><b>Morning Tide</b><small>Sea Lanterns</small></span>
+              <span class="eq"><i></i><i></i><i></i><i></i></span>
+              <span class="prog"><i></i></span>
+            </div>
+
+            <div class="st st-focus">
+              <svg class="ring" viewBox="0 0 36 36"><circle class="ring-bg" cx="18" cy="18" r="15"/><circle class="ring-fg" cx="18" cy="18" r="15" pathLength="100"/></svg>
+              <span class="meta"><small data-t="demo.focus">Фокус</small><b class="js-focus">24:12</b></span>
+              <span class="round"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></span>
+            </div>
+
+            <div class="st st-water">
+              <svg class="drop" viewBox="0 0 24 24"><path d="M12 3c3.6 4.3 6 7.7 6 10.7a6 6 0 0 1-12 0C6 10.7 8.4 7.3 12 3z"/></svg>
+              <span class="meta"><b data-t="demo.water.amount">1,2 из 2 л</b><span class="bar"><i></i></span></span>
+              <span class="round"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></span>
+            </div>
+
+            <div class="st st-files">
+              <span class="file"><i class="f-pdf"><span>PDF</span></i><small>report.pdf</small></span>
+              <span class="file"><i class="f-img"><svg viewBox="0 0 24 24"><path d="m4 17 5-5 4 4 2-2 5 5"/><circle cx="15.5" cy="8.5" r="1.8"/></svg></i><small>photo.jpg</small></span>
+              <span class="file"><i class="f-zip"><span>ZIP</span></i><small>design.zip</small></span>
+            </div>
+
+            <div class="st st-charge">
+              <span class="bolt"><svg viewBox="0 0 24 24"><path d="M13 3 6 13.5h5L10 21l7-10.5h-5z"/></svg></span>
+              <b data-t="demo.charge">Зарядка</b>
+              <b class="pct">78%</b>
+            </div>
+          </div>
+
+          <div class="taskbar" aria-hidden="true"><i></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="chips" role="group" aria-label="Состояния острова" data-t-attr="aria-label:demo.chips">
+          <button type="button" data-s="idle" aria-pressed="true" data-t="demo.idle">Покой</button>
+          <button type="button" data-s="music" aria-pressed="false" data-t="demo.music">Музыка</button>
+          <button type="button" data-s="focus" aria-pressed="false" data-t="demo.focus">Фокус</button>
+          <button type="button" data-s="water" aria-pressed="false" data-t="demo.water">Вода</button>
+          <button type="button" data-s="files" aria-pressed="false" data-t="demo.files">Файлы</button>
+          <button type="button" data-s="charge" aria-pressed="false" data-t="demo.charge">Зарядка</button>
+        </div>
+        <figcaption class="cap" id="cap" aria-live="polite" data-t="demo.cap.idle">В покое — только время и тихая волна.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= Возможности ================= -->
+  <section class="sec" id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker" data-t="nav.features">Возможности</span>
+        <h2 class="sec-title" data-t="feat.title">Маленький остров, много дел</h2>
+        <p class="sec-lede" data-t="feat.lede">Ничего не нужно настраивать и закреплять: остров сам показывает то, что важно прямо сейчас.</p>
+      </div>
+      <div class="grid">
+        <article class="card wide">
+          <span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V5.5l11-2V16"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span>
+          <h3 data-t="f.music.t">Музыка из любого плеера</h3>
+          <p data-t="f.music.d">Spotify, YouTube в браузере и любой плеер, который видит Windows: название, обложка и управление — без переключения окон.</p>
+          <span class="card-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        </article>
+        <article class="card">
+          <span class="ico warm"><svg viewBox="0 0 24 24"><path d="M4 6h9M4 18h7"/><path d="M4 12h16" stroke-width="3"/></svg></span>
+          <h3 data-t="f.lyrics.t">Тексты песен в такт</h3>
+          <p data-t="f.lyrics.d">Каждая строчка подсвечивается ровно тогда, когда её поют. Нажмите на строку — песня перемотается к ней.</p>
+        </article>
+        <article class="card">
+          <span class="ico coral"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></span>
+          <h3 data-t="f.focus.t">Таймер фокуса</h3>
+          <p data-t="f.focus.d">Помодоро прямо в острове: обратный отсчёт всегда на виду, а мягкий сигнал подскажет, когда пора отдохнуть.</p>
+        </article>
+        <article class="card">
+          <span class="ico sky"><svg viewBox="0 0 24 24"><path d="M12 3c3.6 4.3 6 7.7 6 10.7a6 6 0 0 1-12 0C6 10.7 8.4 7.3 12 3z"/><path d="M9.5 14a2.5 2.5 0 0 0 2.5 2.5"/></svg></span>
+          <h3 data-t="f.water.t">Вода по расписанию</h3>
+          <p data-t="f.water.d">Задайте цель на день и рабочие часы — Jazira напомнит сделать глоток и покажет, сколько уже выпито.</p>
+        </article>
+        <article class="card">
+          <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 13 6.2 6.8A2 2 0 0 1 8.1 5.5h7.8a2 2 0 0 1 1.9 1.3L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></svg></span>
+          <h3 data-t="f.files.t">Полка для файлов</h3>
+          <p data-t="f.files.d">Бросьте файл на остров, переключитесь в чат или почту и вытащите его туда. Сам файл остаётся на своём месте.</p>
+        </article>
+        <article class="card">
+          <span class="ico warm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.3 2.6 2.6L16 9.5"/></svg></span>
+          <h3 data-t="f.tasks.t">Задачи с напоминанием</h3>
+          <p data-t="f.tasks.d">Запишите дело и поставьте время — в нужную минуту остров мягко напомнит.</p>
+        </article>
+        <article class="card">
+          <span class="ico sky"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4"/></svg></span>
+          <h3 data-t="f.keys.t">Громкость, яркость, раскладка</h3>
+          <p data-t="f.keys.d">Аккуратные индикаторы вместо стандартных и подсказка, когда включился Caps Lock или сменился язык ввода.</p>
+        </article>
+        <article class="card">
+          <span class="ico coral"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="16" height="10" rx="2.5"/><path d="M21 10.5v3M11.5 9 9.5 12.2h3L11 15"/></svg></span>
+          <h3 data-t="f.status.t">Батарея, сеть, наушники</h3>
+          <p data-t="f.status.d">Короткое уведомление, когда подключили зарядку, пропал Wi‑Fi или подключились наушники.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Принципы ================= -->
+  <section class="sec" id="principles">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="kicker" data-t="nav.principles">Принципы</span>
+        <h2 class="sec-title" data-t="pr.title">Тихий, лёгкий и только ваш</h2>
+        <p class="sec-lede" data-t="pr.lede">Так мы делаем Jazira с первой версии.</p>
+      </div>
+      <div class="pr">
+        <div class="pr-item">
+          <span class="pr-num">01</span>
+          <h3 data-t="pr1.t">Не мешает работать</h3>
+          <p data-t="pr1.d">Пока ничего не происходит, остров не рисует и не нагружает процессор. Игры и фильмы во весь экран он не перекрывает.</p>
+        </div>
+        <div class="pr-item">
+          <span class="pr-num">02</span>
+          <h3 data-t="pr2.t">Данные остаются у вас</h3>
+          <p data-t="pr2.d">Задачи, вода и полка хранятся на вашем компьютере. Без аккаунтов, рекламы и слежки.</p>
+        </div>
+        <div class="pr-item">
+          <span class="pr-num">03</span>
+          <h3 data-t="pr3.t">Родной для Windows</h3>
+          <p data-t="pr3.d">Сделан под Windows 10 и 11: чёткий при любом масштабе экрана и на нескольких мониторах.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Лист ожидания (после релиза — скачивание) ================= -->
+  <section class="sec" id="waitlist">
+    <div class="wrap">
+      <div class="horizon">
+        <span class="kicker wl-only" data-t="wls.kicker">Лист ожидания</span>
+        <h2 class="sec-title wl-only" data-t="wls.title">Будьте первыми на острове</h2>
+        <h2 class="sec-title live-only" data-t="wls.title.live">Скачайте Jazira</h2>
+        <p class="sec-lede wl-only" data-t="wls.lede">Оставьте email или Telegram — пришлём ссылку в день выхода первой версии.</p>
+        <p class="sec-lede live-only" data-t="wls.lede.live">Windows 10 или 11, 64 бита.</p>
+
+        <form class="wl wl-only js-wl" novalidate>
+          <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          <div class="wl-row">
+            <input type="text" name="contact" maxlength="120" autocomplete="email" required placeholder="Email или Telegram" aria-label="Ваш email или Telegram" data-t-attr="placeholder:wl.ph;aria-label:wl.label">
+            <button class="btn" type="submit" data-t="wl.submit">Записаться</button>
+          </div>
+          <p class="wl-done" role="status" data-t="wl.done">Готово! Вы в списке — напишем, как только Jazira выйдет.</p>
+          <p class="wl-msg" aria-live="polite"></p>
+          <p class="wl-note" data-t="wl.note">Напишем один раз — в день выхода. Без рассылок.</p>
+        </form>
+
+        <div class="cta live-only">
+          <a class="btn js-dl" href="#waitlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg><span data-t="hero.download">Скачать для Windows</span></a>
+          <small data-t="hero.version">Версия</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Обратная связь ================= -->
+  <section class="sec" id="feedback">
+    <div class="wrap fb">
+      <div>
+        <span class="kicker" data-t="fb.kicker">Обратная связь</span>
+        <h2 class="sec-title" data-t="fb.title">Чего не хватает?</h2>
+        <p class="sec-lede" data-t="fb.lede">Расскажите, что вы хотели бы видеть в Jazira, или напишите о проблеме. Мы читаем каждое сообщение.</p>
+      </div>
+      <form class="js-fb" novalidate>
+        <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        <textarea class="field" name="msg" maxlength="1500" required placeholder="Ваша идея или отзыв" aria-label="Ваша идея или отзыв" data-t-attr="placeholder:fb.msg.ph;aria-label:fb.msg.ph"></textarea>
+        <input class="field" type="text" name="contact" maxlength="120" autocomplete="email" placeholder="Email или Telegram — если хотите ответ" aria-label="Контакт, необязательно" data-t-attr="placeholder:fb.contact.ph;aria-label:fb.contact.label">
+        <div class="fb-row">
+          <p class="fb-msg" aria-live="polite"></p>
+          <button class="btn" type="submit" data-t="fb.submit">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= Вопросы ================= -->
+  <section class="sec" id="faq">
+    <div class="wrap faq">
+      <h2 class="sec-title" data-t="faq.title">Вопросы</h2>
+      <details><summary data-t="faq.q1">Когда выйдет Jazira?</summary><p data-t="faq.a1">Мы собираем первую версию. Запишитесь в лист ожидания — напишем в тот же день, когда она будет готова.</p></details>
+      <details><summary data-t="faq.q2">Сколько это будет стоить?</summary><p data-t="faq.a2">Условия объявим до выхода, и первыми их узнают те, кто в листе ожидания.</p></details>
+      <details><summary data-t="faq.q3">На каких компьютерах заработает?</summary><p data-t="faq.a3">На Windows 10 и Windows 11, 64 бита.</p></details>
+      <details><summary data-t="faq.q4">Какие плееры поддерживаются?</summary><p data-t="faq.a4">Любые, что появляются в системном управлении музыкой Windows: Spotify, браузеры с YouTube и Яндекс Музыкой, Windows Media Player и другие.</p></details>
+      <details><summary data-t="faq.q5">Что будет с моими данными?</summary><p data-t="faq.a5">В приложении — ничего: всё хранится на вашем компьютере. С этого сайта к нам попадает только то, что вы сами отправили через формы, и мы используем это лишь для ответа и письма о выходе.</p></details>
+      <details><summary data-t="faq.q6">Кто делает Jazira?</summary><p data-t="faq.a6">Bilol. Если есть вопрос, идея или хотите помочь — напишите через <a href="#feedback">форму обратной связи</a>.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p class="foot-brand"><b>© <span class="js-year">2026</span> <span class="js-brand">Jazira</span></b> · <span data-t="foot.made">Сделано Bilol</span></p>
+    <nav class="foot-nav" aria-label="Ссылки" data-t-attr="aria-label:foot.nav">
+      <a href="#features" data-t="nav.features">Возможности</a>
+      <a href="#faq" data-t="nav.faq">Вопросы</a>
+      <a href="#feedback" data-t="foot.feedback">Написать нам</a>
+      <a class="js-tg" href="#" hidden>Telegram</a>
+    </nav>
+    <p class="foot-note" data-t="foot.privacy">Сайт не использует аналитику и cookie.</p>
+  </div>
+</footer>
+</body>
+</html>

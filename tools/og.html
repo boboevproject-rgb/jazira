@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Шаблон картинки для соцсетей 1200×630. PNG собирает tools/render_assets.py -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400..600&family=Unbounded:wght@700&display=swap">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body { position: relative; background: #061016; color: #eef5f3; font-family: "Onest", sans-serif; }
+  .sky { position: absolute; inset: 0 0 32% 0; background: linear-gradient(180deg, #0a1b26 0%, #12303f 45%, #4b4a53 78%, #d98257 95%, #f3b57a 100%); }
+  .sun { position: absolute; left: 860px; top: 428px; width: 240px; height: 240px; border-radius: 50%; transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 50% 38%, #ffe6b0, #ffb15c 55%, #ff7a59); box-shadow: 0 0 120px 40px rgba(255, 150, 80, .3); }
+  .sea { position: absolute; inset: 68% 0 0 0;
+    background: radial-gradient(10% 80% at 860px 0, rgba(255, 190, 120, .5), transparent 72%),
+      repeating-linear-gradient(180deg, transparent 0 9px, rgba(255, 205, 150, .08) 9px 10px), linear-gradient(180deg, #164b56, #061a21); }
+  .island { position: absolute; left: 860px; top: 34px; transform: translateX(-50%); width: 380px; height: 96px; border-radius: 48px;
+    background: #020507; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, .8), inset 0 0 0 2px rgba(255, 255, 255, .07);
+    display: flex; align-items: center; gap: 22px; padding: 0 30px; font-size: 26px; font-weight: 600; }
+  .island .cover { width: 60px; height: 60px; border-radius: 16px; background: linear-gradient(140deg, #2fd4b8, #1b6f8a 50%, #ffb15c); }
+  .island small { display: block; font-size: 19px; font-weight: 400; color: rgba(242, 247, 246, .6); }
+  .text { position: absolute; left: 80px; top: 112px; width: 560px; }
+  .logo { display: flex; align-items: center; gap: 18px; font: 700 64px/1 "Unbounded", sans-serif; letter-spacing: -.02em; }
+  .logo img { width: 96px; height: 96px; }
+  p { margin: 28px 0 0; font-size: 36px; line-height: 1.25; color: #d6e3e1; }
+  .soon { display: inline-block; margin-top: 30px; padding: 10px 22px; border-radius: 999px; border: 2px solid rgba(238, 245, 243, .18); background: rgba(6, 16, 22, .72); color: #d6e3e1; font-size: 24px; }
+</style>
+</head>
+<body>
+  <div class="sky"></div><div class="sun"></div><div class="sea"></div>
+  <div class="island"><span class="cover"></span><span>Morning Tide<small>Sea Lanterns</small></span></div>
+  <div class="text">
+    <div class="logo"><img src="../assets/icon.svg" alt="">Jazira</div>
+    <p>Маленький остров наверху экрана Windows</p>
+    <span class="soon">Скоро для Windows 10 и 11</span>
+  </div>
+</body>
+</html>

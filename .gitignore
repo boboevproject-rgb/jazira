@@ -1,0 +1,5 @@
+# Заявки с локального сервера — живые контакты людей, в git им не место
+dev-submissions.jsonl
+# Скриншоты проверки (tools/test_page.py)
+shots/
+__pycache__/

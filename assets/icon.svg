@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#123847"/>
+      <stop offset=".62" stop-color="#0b2430"/>
+      <stop offset="1" stop-color="#061016"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".66" r=".5">
+      <stop offset="0" stop-color="#ff9a4d" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#ff9a4d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe0a3"/>
+      <stop offset="1" stop-color="#ff8a4c"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2fd4b8"/>
+      <stop offset="1" stop-color="#ffb15c"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="116" fill="url(#glow)"/>
+  <!-- Остров у верхнего края: солнце и волна внутри капсулы -->
+  <rect x="96" y="70" width="320" height="112" rx="56" fill="#020507" stroke="url(#rim)" stroke-width="6"/>
+  <circle cx="170" cy="126" r="30" fill="url(#sun)"/>
+  <path d="M232 134c18-22 36-22 54 0s36 22 54 0" fill="none" stroke="#2fd4b8" stroke-width="14" stroke-linecap="round"/>
+  <!-- Море -->
+  <path d="M96 332c26-26 54-26 80 0s54 26 80 0 54-26 80 0 54 26 80 0" fill="none" stroke="#2fd4b8" stroke-width="20" stroke-linecap="round" opacity=".9"/>
+  <path d="M148 404c24-22 48-22 72 0s48 22 72 0 48-22 72 0" fill="none" stroke="#2fd4b8" stroke-width="16" stroke-linecap="round" opacity=".45"/>
+</svg>
