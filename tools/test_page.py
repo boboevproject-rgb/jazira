@@ -5,6 +5,7 @@
 """
 import json
 import pathlib
+import re
 import sys
 import tempfile
 import threading
@@ -21,10 +22,12 @@ T = load_dict()
 VIEWPORTS = {"desktop": (1366, 900), "mobile": (390, 844)}
 STATES = ["idle", "music", "focus", "water", "files", "charge"]
 problems = []
+# Версия «попробовать раннюю» — та же, что в CONFIG сайта, чтобы тест не правили при каждом релизе
+EARLY = re.search(r'earlyVersion:\s*"([^"]*)"', (ROOT / "assets" / "main.js").read_text(encoding="utf-8")).group(1)
 
 
 def text(key, lang):
-    return T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol").replace("{early}", "0.1")
+    return T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol").replace("{early}", EARLY)
 
 
 def expect(ok, what):

@@ -12,8 +12,8 @@ const CONFIG = {
   downloadUrl: "",
   version: "",
   // Ранняя версия для пробы, пока полной нет: ссылка под формами листа ожидания (пусто — скрыта).
-  earlyUrl: "https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0",
-  earlyVersion: "0.1",
+  earlyUrl: "https://github.com/boboevproject-rgb/jazira/releases/tag/v0.2.0",
+  earlyVersion: "0.2",
   // Telegram для связи — ссылка в подвале (пусто — ссылка скрыта).
   telegram: "https://t.me/bilol_bj"
 };
