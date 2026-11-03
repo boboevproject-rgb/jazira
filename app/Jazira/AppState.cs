@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace Jazira;
 
-// Настройки и журнал воды — только на этом компьютере: %APPDATA%\Jazira\state.json
+// Настройки, журнал воды и полка — только на этом компьютере: %APPDATA%\Jazira\state.json
 public sealed class AppState
 {
     public string? Lang { get; set; }
@@ -15,7 +15,28 @@ public sealed class AppState
     public int WaterGoalMl { get; set; } = 2000;
     public Dictionary<string, int> WaterLog { get; set; } = new();
     public DateTime? LastDrink { get; set; }
-    public int Page { get; set; }
+    public int Page { get; set; }            // 0.1: номер страницы; с 0.2 — PageName
+    public string? PageName { get; set; }
+
+    // Вид и место
+    public string Theme { get; set; } = "night";
+    public string Shape { get; set; } = "pill";   // pill — капсула; notch — вырез, слитый с краем экрана
+    public bool Docked { get; set; } = true;      // прикреплён к верху экрана или стоит где угодно
+    public string? Monitor { get; set; }          // имя монитора Windows; пусто — основной
+    public double FloatX { get; set; } = 0.5;     // свободное место: центр острова в долях рабочей области
+    public double FloatY { get; set; } = 0.25;
+    public double Scale { get; set; } = 1.0;
+    public bool CoverTint { get; set; } = true;
+
+    // Функции
+    public bool Lyrics { get; set; } = true;
+    public bool Koi { get; set; } = true;
+    public bool Indicators { get; set; } = true;
+    public bool LocalPage { get; set; } = true;
+    public bool Prayer { get; set; }
+    public string City { get; set; } = "dushanbe";
+    public bool AutoUpdate { get; set; } = true;
+    public List<string> Shelf { get; set; } = new();
 
     public static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Jazira");
     static string FilePath => Path.Combine(Dir, "state.json");

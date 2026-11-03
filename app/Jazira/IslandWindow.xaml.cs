@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -12,13 +12,16 @@ using Microsoft.Win32;
 
 namespace Jazira;
 
-// Остров у верхнего края экрана. В покое — время и значки; навёл курсор — раскрывается
-// в страницы «Музыка / Фокус / Вода»; события (зарядка, новая песня, вода) — короткий «пик».
+// Остров у верхнего края экрана (или там, куда его перетащили). В покое — время, значки или строка песни;
+// навёл курсор — раскрывается в страницы «Музыка / Полка / Фокус / Вода / Сегодня»;
+// события (зарядка, песня, громкость, раскладка, камера, вода…) — короткий «пик».
+// Остальное — в соседних файлах: IslandWindow.Place.cs (место, вид, перетаскивание),
+// IslandWindow.Shelf.cs (полка), IslandWindow.Live.cs (тексты, индикаторы, «Сегодня», снимки).
 public partial class IslandWindow : Window
 {
     enum Mode { Idle, Expanded, Peek }
-    static readonly string[] Pages = { "music", "focus", "water" };
-    static readonly Size IdleSize = new(196, 34);
+    static readonly string[] AllPages = { "music", "shelf", "focus", "water", "local" };
+    static readonly Size IdleBase = new(196, 34);
 
     static Geometry G(string d) { var g = Geometry.Parse(d); g.Freeze(); return g; }
     static readonly Geometry PlayGeo = G("M8 5v14l11-7z");
@@ -33,24 +36,48 @@ public partial class IslandWindow : Window
     static readonly Geometry ResetGeo = G("M4.5 12a7.5 7.5 0 1 0 2.2-5.3 M4.5 4.5v4h4");
     static readonly Geometry LeftGeo = G("M7 1 1 7l6 6");
     static readonly Geometry RightGeo = G("M1 1l6 6-6 6");
+    static readonly Geometry CrossGeo = G("M1 1 9 9 M9 1 1 9");
+    static readonly Geometry SunGeo = G("M7.8 12a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0z M19.3 12a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M16.78 18.08a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M10.7 20.6a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M4.62 18.08a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M2.1 12a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M4.62 5.92a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M10.7 3.4a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z M16.78 5.92a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z");
+    static readonly Geometry MoonGeo = G("M14 3.2A9 9 0 1 0 20.8 14A7.2 7.2 0 0 1 14 3.2z");
+    static readonly Geometry CloudGeo = G("M7 19a5 5 0 0 1-.9-9.92A6.5 6.5 0 0 1 18.6 8.3 4.6 4.6 0 0 1 18 19z");
+    const string SmallCloud = "M7 14a4.2 4.2 0 0 1-.7-8.35A5.6 5.6 0 0 1 17.4 5 3.9 3.9 0 0 1 17 14z";
+    static readonly Geometry RainGeo = G(SmallCloud + " M8 16.5h1.6l-1.2 4H6.8z M12.2 16.5h1.6l-1.2 4H11z M16.4 16.5H18l-1.2 4h-1.6z");
+    static readonly Geometry SnowGeo = G(SmallCloud + " M7.6 18.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z M11.8 20.2a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z M16 18.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0z");
+    static readonly Geometry StormGeo = G(SmallCloud + " M12.6 15l-3.2 4.6h2.6l-1 4.2 4.2-6h-2.7l1.5-2.8z");
+    static readonly Geometry FogGeo = G("M3 8h18v2H3z M5 12h16v2H5z M3 16h14v2H3z");
+    static readonly Geometry SpeakerGeo = G("M3 9h4l5-4.5v15L7 15H3z M15.5 8.6a4.8 4.8 0 0 1 0 6.8l-1.3-1.3a3 3 0 0 0 0-4.2z M18.3 5.8a8.8 8.8 0 0 1 0 12.4L17 16.9a7 7 0 0 0 0-9.8z");
+    static readonly Geometry MuteGeo = G("M3 9h4l5-4.5v15L7 15H3z M15 9.6l1.2-1.2 2.4 2.4 2.4-2.4 1.2 1.2-2.4 2.4 2.4 2.4-1.2 1.2-2.4-2.4-2.4 2.4-1.2-1.2 2.4-2.4z");
+    static readonly Geometry KeyboardGeo = G("M3 6h18a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 21 18H3a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 3 6z M5 9h2v2H5z M8.5 9h2v2h-2z M12 9h2v2h-2z M15.5 9h2v2h-2z M7 13.5h10v1.8H7z");
+    static readonly Geometry CapsGeo = G("M12 3l8 8.5h-4.6V16H8.6v-4.5H4z M8 18h8v2.2H8z");
+    static readonly Geometry CameraGeo = G("M3.5 6.5h11a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 2 16V8a1.5 1.5 0 0 1 1.5-1.5z M17 10.2l5-3v9.6l-5-3z");
+    static readonly Geometry MicGeo = G("M12 2.5a3.2 3.2 0 0 1 3.2 3.2v5.6a3.2 3.2 0 0 1-6.4 0V5.7A3.2 3.2 0 0 1 12 2.5z M5.5 11h1.8a4.7 4.7 0 0 0 9.4 0h1.8a6.5 6.5 0 0 1-5.6 6.4V21h-1.8v-3.6A6.5 6.5 0 0 1 5.5 11z");
+    static readonly Geometry UpdateGeo = G("M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4 3.3 3.3z M4 18.5h16v2H4z");
 
     readonly MediaService _media;
     readonly PowerService _power;
     readonly FocusTimer _focus = new();
+    readonly LyricsService _lyrics = new();
+    readonly LocalInfo _local = new();
+    readonly AudioWatch? _audio;
+    readonly SystemWatch? _sys;
     readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
+    readonly DispatcherTimer _fast = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
     readonly DispatcherTimer _hoverIn = new() { Interval = TimeSpan.FromMilliseconds(70) };
     readonly DispatcherTimer _hoverOut = new() { Interval = TimeSpan.FromMilliseconds(380) };
     readonly DispatcherTimer _peekEnd = new();
+    readonly Stopwatch _clock = Stopwatch.StartNew();
     readonly DateTime _startedAt = DateTime.Now;
     readonly bool _instant; // снимки: без анимаций
     Mode _mode = Mode.Idle;
     int _page;
     int _lastMinute = -1;
-    string _lastDay = AppState.Today;
     DateTime _lastWaterReminder = DateTime.Now; // первое напоминание — не раньше чем через час после запуска
     DateTime _lastFullscreenCheck;
     Action? _peekAction;
-    bool _eqOn;
+    string _peekKind = "";
+
+    public event Action? MenuRequested;    // правый клик по острову — то же меню, что в трее
+    public event Action? SettingsChanged;  // остров перетащили: изменились место или монитор
 
     public IslandWindow(bool snapshot = false)
     {
@@ -58,63 +85,45 @@ public partial class IslandWindow : Window
         _instant = snapshot;
         _media = new MediaService(Dispatcher);
         _power = new PowerService(Dispatcher);
-        _page = Math.Clamp(AppState.Current.Page, 0, Pages.Length - 1);
+        _page = Math.Max(0, Array.IndexOf(Pages, AppState.Current.PageName ?? ""));
 
         PrevIcon.Data = PrevGeo; NextIcon.Data = NextGeo; CoverNote.Data = NoteGeo;
         IdleBolt.Data = BoltGeo; WaterDrop.Data = DropGeo; ResetIcon.Data = ResetGeo;
         NavLeftIcon.Data = LeftGeo; NavRightIcon.Data = RightGeo;
         ProgTrack.SizeChanged += (_, _) => RefreshMusicProgress();
         WaterTrack.SizeChanged += (_, _) => RefreshWater();
-        ApplyTexts();
+        ApplyLook();
+        RefreshAll();
         if (snapshot) return;
 
+        _audio = new AudioWatch();
+        _sys = new SystemWatch(Dispatcher);
         SourceInitialized += (_, _) => MakeToolWindow();
-        Loaded += (_, _) => PlaceAtTop();
-        SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(PlaceAtTop);
-        _hoverIn.Tick += (_, _) => { _hoverIn.Stop(); Expand(); };
-        _hoverOut.Tick += (_, _) => { _hoverOut.Stop(); Collapse(); };
+        Loaded += (_, _) => { ApplyScale(); Place(); };
+        DpiChanged += (_, _) => { if (!_dragging) Dispatcher.InvokeAsync(Place, DispatcherPriority.Background); };
+        SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(Place);
+        _hoverIn.Tick += (_, _) => { _hoverIn.Stop(); if (CursorOverIsland()) Expand(); };
+        _hoverOut.Tick += (_, _) =>
+        {
+            _hoverOut.Stop();
+            if (_mode != Mode.Expanded || _pressed || _dragOut) return;
+            if (CursorOverIsland()) { _hoverOut.Start(); return; } // курсор ещё над островом (например, после перетаскивания файла)
+            Collapse();
+        };
         _peekEnd.Tick += (_, _) => { _peekEnd.Stop(); if (_mode == Mode.Peek) Collapse(); };
         _tick.Tick += (_, _) => OnTick();
-        _media.Changed += () =>
-        {
-            RefreshMusic();
-            RefreshIdle();
-            if (_mode == Mode.Expanded && Pages[_page] == "music") AnimateTo(PageSize()); // плеер включили или закрыли
-        };
-        _media.TrackChanged += OnTrackChanged;
-        _power.Changed += RefreshIdle;
-        _power.PlugChanged += OnPlugChanged;
-        _focus.Finished += OnFocusFinished;
+        _fast.Tick += (_, _) => OnFast();
+        WireLive();
         _tick.Start();
         _ = _media.StartAsync();
+        ApplyFeatures();
     }
 
-    // ---- Окно ----------------------------------------------------------------------------------
+    // ---- Покой, раскрытие, страницы ------------------------------------------------------------
 
-    void MakeToolWindow()
-    {
-        var h = new WindowInteropHelper(this).Handle;
-        Native.SetWindowLong(h, Native.GWL_EXSTYLE, Native.GetWindowLong(h, Native.GWL_EXSTYLE) | Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE);
-    }
-
-    // По центру верхнего края основного монитора; если панель задач сверху — сразу под ней
-    void PlaceAtTop()
-    {
-        var area = SystemParameters.WorkArea;
-        Left = area.Left + (area.Width - Width) / 2;
-        Top = area.Top;
-    }
-
-    public void ApplyVisibility()
-    {
-        bool show = AppState.Current.ShowIsland && !Native.FullscreenAppActive();
-        if (show && !IsVisible)
-        {
-            Show();
-            Topmost = false; Topmost = true; // вернуться поверх окон после полноэкранного приложения
-        }
-        else if (!show && IsVisible) Hide();
-    }
+    string[] Pages => AppState.Current.LocalPage ? AllPages : AllPages.Where(p => p != "local").ToArray();
+    string PageName => Pages[Math.Clamp(_page, 0, Pages.Length - 1)];
+    bool HasTrack => _media.HasSession && _media.Title.Length > 0;
 
     void OnTick()
     {
@@ -125,14 +134,17 @@ public partial class IslandWindow : Window
         {
             _lastMinute = now.Minute;
             _power.Read();
-            if (AppState.Today != _lastDay) { _lastDay = AppState.Today; RefreshWater(); }
+            RefreshWater(); // новый день — счётчик с нуля; и вода в пруду рыбки понемногу мелеет
             CheckWaterReminder(now);
+            CheckPrayer(now);
+            if (AppState.Current.LocalPage) _ = _local.RefreshAsync();
+            if (_mode == Mode.Expanded && PageName == "local") RefreshLocal();
         }
         RefreshIdleRight();
         if (_mode == Mode.Expanded)
         {
-            if (Pages[_page] == "music" && _media.IsPlaying) RefreshMusicProgress();
-            if (Pages[_page] == "focus") RefreshFocus();
+            if (PageName == "music" && _media.IsPlaying) RefreshMusicProgress();
+            if (PageName == "focus") RefreshFocus();
         }
         if ((now - _lastFullscreenCheck).TotalSeconds >= 2)
         {
@@ -141,18 +153,24 @@ public partial class IslandWindow : Window
         }
     }
 
-    // ---- Раскрытие и сворачивание -------------------------------------------------------------
-
     void Island_MouseEnter(object sender, MouseEventArgs e)
     {
         _hoverOut.Stop();
+        // Уведомление с кнопкой («+250 мл», «Обновить») не раскрываем — даём нажать кнопку
+        if (_mode == Mode.Peek && _peekAction != null) { _peekEnd.Stop(); return; }
         if (_mode != Mode.Expanded) _hoverIn.Start();
     }
 
     void Island_MouseLeave(object sender, MouseEventArgs e)
     {
         _hoverIn.Stop();
-        if (_mode == Mode.Expanded) _hoverOut.Start();
+        if (_mode == Mode.Peek && _peekAction != null)
+        {
+            _peekEnd.Interval = TimeSpan.FromSeconds(2);
+            _peekEnd.Start();
+            return;
+        }
+        if (_mode == Mode.Expanded && !_pressed) _hoverOut.Start();
     }
 
     void Island_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -160,43 +178,68 @@ public partial class IslandWindow : Window
         if (_mode == Mode.Expanded) GoPage(e.Delta < 0 ? 1 : -1);
     }
 
-    // Наведение открывает музыку, если она играет, иначе — последнюю страницу
-    void Expand(int? page = null)
+    void Island_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
-        _peekEnd.Stop();
-        if (page is int p) _page = p;
-        else if (_mode != Mode.Expanded && _media.IsPlaying) _page = 0;
-        _mode = Mode.Expanded;
-        SetEq(false);
-        NavLayer.Visibility = Visibility.Visible;
-        ShowPanel(Pages[_page] switch { "music" => MusicPanel, "focus" => FocusPanel, _ => WaterPanel });
-        AnimateTo(PageSize());
-        RefreshAll();
+        e.Handled = true;
+        MenuRequested?.Invoke();
     }
 
-    // Музыка без плеера — компактная карточка, с плеером — с полосой и кнопками
-    Size PageSize() => Pages[_page] != "music" ? new Size(420, 112)
-                     : HasTrack ? new Size(420, 150) : new Size(420, 96);
+    // Наведение открывает музыку, если она играет, иначе — последнюю страницу
+    void Expand(string? page = null)
+    {
+        _peekEnd.Stop();
+        var pages = Pages;
+        if (page != null) _page = Math.Max(0, Array.IndexOf(pages, page));
+        else if (_mode != Mode.Expanded && _media.IsPlaying) _page = 0;
+        _page = Math.Clamp(_page, 0, pages.Length - 1);
+        _mode = Mode.Expanded;
+        _peekKind = "";
+        _peekAction = null;
+        NavLayer.Visibility = Visibility.Visible;
+        ShowPanel(PanelOf(PageName));
+        RefreshAll();
+        AnimateTo(PageSize());
+    }
 
-    bool HasTrack => _media.HasSession && _media.Title.Length > 0;
+    FrameworkElement PanelOf(string page) => page switch
+    {
+        "music" => MusicPanel,
+        "shelf" => ShelfPanel,
+        "focus" => FocusPanel,
+        "water" => WaterPanel,
+        _ => LocalPanel,
+    };
+
+    Size PageSize() => PageName switch
+    {
+        "music" => !HasTrack ? new Size(420, 96) : LyricBlock.Visibility == Visibility.Visible ? new Size(420, 194) : new Size(420, 150),
+        "shelf" => new Size(420, 122),
+        "water" => new Size(440, 112),
+        "local" => new Size(AppState.Current.Prayer ? 460 : 400, 112),
+        _ => new Size(420, 112),
+    };
 
     void Collapse()
     {
         _mode = Mode.Idle;
+        _peekKind = "";
+        _peekAction = null;
         NavLayer.Visibility = Visibility.Collapsed;
         ShowPanel(IdlePanel);
-        AnimateTo(IdleSize);
         RefreshIdle();
+        AnimateTo(IdleSize());
     }
 
     void GoPage(int delta)
     {
-        _page = (_page + delta + Pages.Length) % Pages.Length;
-        AppState.Current.Page = _page;
-        Expand(_page);
+        var pages = Pages;
+        _page = (_page + delta + pages.Length) % pages.Length;
+        AppState.Current.PageName = PageName;
+        Expand(PageName);
     }
 
-    void AnimateTo(Size size)
+    // Растёт — пружиной с перелётом, как капля; сжимается — мягко, без «проваливания» внутрь
+    void AnimateTo(Size size, bool gentle = false)
     {
         if (_instant)
         {
@@ -206,16 +249,23 @@ public partial class IslandWindow : Window
             Island.Height = size.Height;
             return;
         }
-        // Лёгкий «пружинящий» перелёт размера, как у капли
-        var ease = new BackEase { Amplitude = 0.28, EasingMode = EasingMode.EaseOut };
-        var d = new Duration(TimeSpan.FromMilliseconds(430));
-        Island.BeginAnimation(WidthProperty, new DoubleAnimation(size.Width, d) { EasingFunction = ease });
-        Island.BeginAnimation(HeightProperty, new DoubleAnimation(size.Height, d) { EasingFunction = ease });
+        Animate(WidthProperty, size.Width, Island.ActualWidth, gentle);
+        Animate(HeightProperty, size.Height, Island.ActualHeight, gentle);
+    }
+
+    void Animate(DependencyProperty prop, double to, double from, bool gentle)
+    {
+        bool grow = to > from + 0.5;
+        IEasingFunction ease = gentle ? new CubicEase { EasingMode = EasingMode.EaseOut }
+                             : grow ? new SpringEase()
+                             : new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut };
+        var ms = gentle ? 300 : grow ? 640 : 380;
+        Island.BeginAnimation(prop, new DoubleAnimation(to, TimeSpan.FromMilliseconds(ms)) { EasingFunction = ease });
     }
 
     void ShowPanel(FrameworkElement target)
     {
-        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, FocusPanel, WaterPanel, PeekPanel })
+        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, ShelfPanel, FocusPanel, WaterPanel, LocalPanel, PeekPanel })
         {
             if (p == target) continue;
             p.BeginAnimation(OpacityProperty, null);
@@ -228,45 +278,46 @@ public partial class IslandWindow : Window
         target.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)) { BeginTime = TimeSpan.FromMilliseconds(140) });
     }
 
-    // Скругление — по высоте острова; содержимое обрезается по той же форме
-    void Island_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        double r = Math.Min(e.NewSize.Height / 2, 26);
-        Island.CornerRadius = new CornerRadius(r);
-        var inner = new Size(Math.Max(0, e.NewSize.Width - 2), Math.Max(0, e.NewSize.Height - 2));
-        Body.Clip = new RectangleGeometry(new Rect(inner), Math.Max(0, r - 1), Math.Max(0, r - 1));
-    }
-
     // ---- Короткие уведомления -----------------------------------------------------------------
 
-    void ShowPeek(Brush iconBg, Geometry? icon, string title, string sub, string right, Brush? rightBrush,
-                  double seconds, string? action = null, Action? onAction = null, double iconRadius = 14)
+    // kind — тип уведомления: повтор того же типа (громкость крутят) обновляет текст без новой анимации
+    void ShowPeek(string kind, Brush iconBg, Geometry? icon, string title, string sub = "", string right = "",
+                  Brush? rightBrush = null, double seconds = 3, string? action = null, Action? onAction = null,
+                  double iconRadius = 14, double? bar = null)
     {
-        if (_mode == Mode.Expanded) return; // открытый остров и так всё показывает
+        if (_mode == Mode.Expanded || _pressed || _dragOut) return; // открытый остров и так всё показывает
+        bool same = _mode == Mode.Peek && _peekKind == kind;
         _mode = Mode.Peek;
-        SetEq(false);
+        _peekKind = kind;
         PeekIconBox.Background = iconBg;
         PeekIconBox.CornerRadius = new CornerRadius(iconRadius);
         PeekIcon.Data = icon;
         PeekIcon.Visibility = icon != null ? Visibility.Visible : Visibility.Collapsed;
         PeekTitle.Text = title;
         PeekSub.Text = sub;
-        PeekSub.Visibility = sub.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PeekSub.Visibility = sub.Length > 0 && bar == null ? Visibility.Visible : Visibility.Collapsed;
+        PeekBarTrack.Visibility = bar != null ? Visibility.Visible : Visibility.Collapsed;
+        if (bar is double f)
+        {
+            f = Math.Clamp(f, 0, 1);
+            if (_instant || !same) { PeekBarScale.BeginAnimation(ScaleTransform.ScaleXProperty, null); PeekBarScale.ScaleX = f; }
+            else PeekBarScale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(f, TimeSpan.FromMilliseconds(140)));
+        }
         PeekRight.Text = right;
-        PeekRight.Foreground = rightBrush ?? Brushes.White;
+        PeekRight.Foreground = rightBrush ?? Res("Fg");
         _peekAction = onAction;
         PeekAction.Visibility = action != null ? Visibility.Visible : Visibility.Collapsed;
         PeekActionText.Text = action ?? "";
-        ShowPanel(PeekPanel);
-        AnimateTo(new Size(action != null ? 380 : 330, sub.Length > 0 ? 50 : 42));
+        if (!same) ShowPanel(PeekPanel);
+        AnimateTo(new Size(action != null ? 380 : 330, sub.Length > 0 || bar != null ? 50 : 42), gentle: same);
         _peekEnd.Interval = TimeSpan.FromSeconds(seconds);
         _peekEnd.Stop();
         _peekEnd.Start();
     }
 
     void OnPlugChanged(bool on) =>
-        ShowPeek(on ? Res("Green") : Res("Muted"), BoltGeo, Strings.Get(on ? "charge.on" : "charge.off"), "",
-                 $"{_power.Percent}%", on ? Res("Green") : null, 3);
+        ShowPeek("charge", on ? Res("Green") : Res("Muted"), BoltGeo, Strings.Get(on ? "charge.on" : "charge.off"),
+                 right: $"{_power.Percent}%", rightBrush: on ? Res("Green") : null);
 
     void OnTrackChanged()
     {
@@ -278,14 +329,14 @@ public partial class IslandWindow : Window
     void ShowTrackPeek()
     {
         var bg = _media.Cover != null ? new ImageBrush(_media.Cover) { Stretch = Stretch.UniformToFill } : Res("CoverGradient");
-        ShowPeek(bg, _media.Cover == null ? NoteGeo : null, _media.Title, _media.Artist, "", null, 3, iconRadius: 7);
+        ShowPeek("track", bg, _media.Cover == null ? NoteGeo : null, _media.Title, _media.Artist, iconRadius: 7);
     }
 
     void OnFocusFinished(bool wasFocus)
     {
         Chime.Play();
-        ShowPeek(wasFocus ? Res("Lagoon") : Res("Coral"), wasFocus ? CupGeo : WatchGeo,
-                 Strings.Get(wasFocus ? "focus.done" : "focus.breakDone"), "", "", null, 6);
+        ShowPeek("focus", wasFocus ? Res("Lagoon") : Res("Coral"), wasFocus ? CupGeo : WatchGeo,
+                 Strings.Get(wasFocus ? "focus.done" : "focus.breakDone"), seconds: 6);
         RefreshFocus();
         RefreshIdleRight();
     }
@@ -304,9 +355,9 @@ public partial class IslandWindow : Window
     {
         var st = AppState.Current;
         var ml = Strings.Get("ml");
-        ShowPeek(Res("Sky"), DropGeo, Strings.Get("water.remind"),
+        ShowPeek("water", Res("Sky"), DropGeo, Strings.Get(st.Koi ? "water.koiRemind" : "water.remind"),
                  $"{st.WaterToday.ToString("#,0", Strings.Culture)} / {st.WaterGoalMl.ToString("#,0", Strings.Culture)} {ml}",
-                 "", null, 8, $"+250 {ml}", () => AddWater(250));
+                 seconds: 8, action: $"+250 {ml}", onAction: () => AddWater(250));
     }
 
     // ---- Обновление содержимого ---------------------------------------------------------------
@@ -317,18 +368,46 @@ public partial class IslandWindow : Window
     {
         RefreshIdle();
         RefreshMusic();
+        RefreshShelf();
         RefreshFocus();
         RefreshWater();
+        RefreshLocal();
     }
 
     void RefreshIdle()
     {
+        var st = AppState.Current;
         bool playing = _media.IsPlaying;
         IdleEq.Visibility = playing ? Visibility.Visible : Visibility.Collapsed;
-        IdleSun.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
-        SetEq(playing && _mode == Mode.Idle && !_instant); // анимация — только пока её видно
+        IdleKoi.Visibility = !playing && st.Koi ? Visibility.Visible : Visibility.Collapsed;
+        IdleSun.Visibility = !playing && !st.Koi ? Visibility.Visible : Visibility.Collapsed;
+        var line = CurrentLyric();
+        bool lyric = st.Lyrics && playing && line.Length > 0;
+        IdleLyric.Text = line;
+        IdleLyric.Visibility = lyric ? Visibility.Visible : Visibility.Collapsed;
+        IdleTime.Visibility = lyric ? Visibility.Collapsed : Visibility.Visible;
         IdleTime.Text = DateTime.Now.ToString("HH:mm", CultureInfo.InvariantCulture);
+        DotCam.Visibility = st.Indicators && CamApp != null ? Visibility.Visible : Visibility.Collapsed;
+        DotMic.Visibility = st.Indicators && MicApp != null ? Visibility.Visible : Visibility.Collapsed;
+        if (_instant) { Eq1.Height = 8; Eq2.Height = 14; Eq3.Height = 6; Eq4.Height = 11; }
         RefreshIdleRight();
+        UpdateFast();
+    }
+
+    // Ширина свёрнутого острова: строка песни раздвигает его, точки камеры и микрофона — чуть-чуть
+    Size IdleSize()
+    {
+        double w = IdleBase.Width;
+        if (IdleLyric.Visibility == Visibility.Visible)
+        {
+            var ft = new FormattedText(IdleLyric.Text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+                new Typeface(IdleLyric.FontFamily, IdleLyric.FontStyle, IdleLyric.FontWeight, IdleLyric.FontStretch),
+                IdleLyric.FontSize, Brushes.White, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            w = Math.Clamp(ft.WidthIncludingTrailingWhitespace + 34 + 48 + 26 + 6, 230, 460);
+        }
+        if (DotCam.Visibility == Visibility.Visible) w += 12;
+        if (DotMic.Visibility == Visibility.Visible) w += 12;
+        return new Size(w, IdleBase.Height);
     }
 
     // Справа в покое: идущий таймер важнее заряда
@@ -353,18 +432,6 @@ public partial class IslandWindow : Window
         }
     }
 
-    void SetEq(bool on)
-    {
-        if (on == _eqOn) return;
-        _eqOn = on;
-        var bars = new[] { Eq1, Eq2, Eq3, Eq4 };
-        double[] peaks = { 12, 16, 10, 14 }, periods = { 0.42, 0.55, 0.37, 0.5 };
-        for (int i = 0; i < bars.Length; i++)
-            bars[i].BeginAnimation(HeightProperty, on
-                ? new DoubleAnimation(4, peaks[i], TimeSpan.FromSeconds(periods[i])) { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase() }
-                : null);
-    }
-
     void RefreshMusic()
     {
         bool has = HasTrack;
@@ -378,6 +445,8 @@ public partial class IslandWindow : Window
         CoverBox.Background = _media.Cover != null ? new ImageBrush(_media.Cover) { Stretch = Stretch.UniformToFill } : Res("CoverGradient");
         CoverNote.Visibility = _media.Cover != null ? Visibility.Collapsed : Visibility.Visible;
         PlayIcon.Data = _media.IsPlaying ? PauseGeo : PlayGeo;
+        LyricBlock.Visibility = has && AppState.Current.Lyrics && _lyrics.Lines != null ? Visibility.Visible : Visibility.Collapsed;
+        RefreshLyricTexts();
         RefreshMusicProgress();
     }
 
@@ -420,14 +489,31 @@ public partial class IslandWindow : Window
         WaterGoalRun.Text = $" / {goal.ToString("#,0", Strings.Culture)} {ml}";
         double f = goal > 0 ? Math.Min(1, now / (double)goal) : 0;
         WaterFill.Width = WaterTrack.ActualWidth * f;
-        WaterNote.Text = $"{Strings.Get("water.today")} · {(int)Math.Round(f * 100)}%" + (f >= 1 ? " · " + Strings.Get("water.goal") : "");
         Water250Text.Text = $"+250 {ml}";
         WaterUndoText.Text = Strings.Get("water.undo");
+
+        WaterKoi.Visibility = st.Koi ? Visibility.Visible : Visibility.Collapsed;
+        WaterDrop.Visibility = st.Koi ? Visibility.Collapsed : Visibility.Visible;
+        var (level, energy, thirsty) = KoiMood();
+        foreach (var koi in new[] { WaterKoi, IdleKoi }) { koi.Level = level; koi.Energy = energy; }
+        WaterNote.Text = st.Koi && thirsty && f < 1
+            ? Strings.Get("water.thirsty")
+            : $"{Strings.Get("water.today")} · {(int)Math.Round(f * 100)}%" + (f >= 1 ? " · " + Strings.Get("water.goal") : "");
+    }
+
+    // Настроение рыбки: чем дольше вы не пили, тем мельче пруд и тем она вялее
+    static (double Level, double Energy, bool Thirsty) KoiMood()
+    {
+        var st = AppState.Current;
+        double hours = st.LastDrink is DateTime d ? (DateTime.Now - d).TotalHours : 8;
+        if (st.WaterToday >= st.WaterGoalMl) hours = Math.Min(hours, 1); // цель выполнена — рыбке хорошо весь день
+        return (Math.Clamp(1 - hours / 4.5, 0.22, 1), Math.Clamp(1 - hours / 3, 0.15, 1), hours >= 2);
     }
 
     void AddWater(int ml)
     {
         AppState.Current.AddWater(ml);
+        if (ml > 0) { WaterKoi.Splash(); IdleKoi.Splash(); }
         RefreshWater();
     }
 
@@ -448,39 +534,13 @@ public partial class IslandWindow : Window
     {
         var action = _peekAction;
         _peekAction = null;
-        action?.Invoke();
         _peekEnd.Stop();
         Collapse();
+        action?.Invoke();
     }
 
     Brush Res(string key) => (Brush)FindResource(key);
 
     static string Fmt(TimeSpan t) =>
         t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture) : $"{(int)t.TotalMinutes}:{t.Seconds:00}";
-
-    // ---- Снимки всех состояний (Jazira.exe --snapshot) ------------------------------------------
-
-    internal IEnumerable<(string Name, Action Setup)> SnapshotStates(BitmapSource cover)
-    {
-        void Track(bool playing) => _media.Fake("Morning Tide", "Sea Lanterns", "Spotify", cover, playing,
-                                                TimeSpan.FromSeconds(84), TimeSpan.FromSeconds(212));
-        void Water(int ml) => AppState.Current.WaterLog[AppState.Today] = ml; // без сохранения на диск
-
-        foreach (var lang in new[] { "ru", "tg" })
-        {
-            yield return ($"{lang}-idle", () => { Strings.Lang = lang; _media.FakeNone(); _power.Fake(true, false, 78); _focus.Reset(); Collapse(); });
-            yield return ($"{lang}-idle-busy", () => { Track(true); _power.Fake(true, true, 64); _focus.Preview(TimeSpan.FromSeconds(24 * 60 + 12), true); Collapse(); });
-            yield return ($"{lang}-music", () => { Track(true); Expand(0); });
-            yield return ($"{lang}-music-empty", () => { _media.FakeNone(); Expand(0); });
-            yield return ($"{lang}-focus", () => { _focus.Preview(TimeSpan.FromSeconds(24 * 60 + 12), true); Expand(1); });
-            yield return ($"{lang}-water", () => { Water(1250); Expand(2); });
-            yield return ($"{lang}-peek-charge", () => { Collapse(); _power.Fake(true, true, 78); OnPlugChanged(true); });
-            yield return ($"{lang}-peek-track", () => { Collapse(); Track(true); ShowTrackPeek(); });
-            yield return ($"{lang}-peek-water", () => { Collapse(); Water(750); ShowWaterPeek(); });
-            yield return ($"{lang}-peek-focus", () => { Collapse(); OnFocusFinishedPreview(); });
-        }
-    }
-
-    void OnFocusFinishedPreview() =>
-        ShowPeek(Res("Lagoon"), CupGeo, Strings.Get("focus.done"), "", "", null, 6);
 }

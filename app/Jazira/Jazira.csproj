@@ -14,12 +14,17 @@
     <RootNamespace>Jazira</RootNamespace>
     <ApplicationIcon>..\..\assets\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Product>Jazira</Product>
     <Company>Bilol</Company>
     <Copyright>© 2026 Bilol · MIT</Copyright>
     <Description>Jazira — маленький остров наверху экрана Windows</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Яркость экрана ноутбука — события WMI -->
+    <PackageReference Include="System.Management" Version="9.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="..\..\assets\icon.ico" Link="Assets\jazira.ico" />

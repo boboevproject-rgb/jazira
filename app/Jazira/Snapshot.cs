@@ -13,6 +13,8 @@ static class Snapshot
     public static void Render(string dir)
     {
         Directory.CreateDirectory(dir);
+        KoiPond.Still = true;
+        WriteSelfTest(Path.Combine(dir, "selftest.txt"));
         var w = new IslandWindow(snapshot: true) { Left = -4000, Top = -4000 };
         w.Root.Background = new SolidColorBrush(Color.FromRgb(0x1D, 0x2B, 0x33)); // «рабочий стол» под островом
         w.Show();
@@ -41,6 +43,22 @@ static class Snapshot
         enc.Frames.Add(BitmapFrame.Create(crop));
         using var f = File.Create(path);
         enc.Save(f);
+    }
+
+    // Расчёты без экрана: время намаза на сегодня и разбор текста песни — чтобы сверить глазами
+    static void WriteSelfTest(string path)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var city in LocalInfo.Cities)
+        {
+            var t = PrayerTimes.ForDate(DateTime.Today, city.Lat, city.Lon);
+            sb.Append($"{city.En,-18}");
+            for (int i = 0; i < t.Length; i++) sb.Append($" {PrayerTimes.Keys[i]} {t[i]:HH:mm}Z");
+            sb.AppendLine();
+        }
+        var lines = LyricsService.Parse("[00:35.66]Look at the stars\n[00:38.46]Look how they shine\n[01:02.5][01:40.00]Twice\n[00:40.36]");
+        sb.AppendLine($"lyrics: {lines?.Length} lines, first {lines?[0].At} '{lines?[0].Text}', last {lines?[^1].At} '{lines?[^1].Text}'");
+        File.WriteAllText(path, sb.ToString());
     }
 
     // Обложка-заглушка: градиент «море и закат»

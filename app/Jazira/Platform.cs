@@ -13,9 +13,44 @@ static class Native
     public const int WS_EX_TOOLWINDOW = 0x00000080;   // не показывать в Alt+Tab
     public const int WS_EX_NOACTIVATE = 0x08000000;   // клик по острову не отнимает фокус у вашего окна
 
+    public const uint SWP_NOSIZE = 0x0001, SWP_NOZORDER = 0x0004, SWP_NOACTIVATE = 0x0010;
+
+    [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X, Y; }
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+
     [DllImport("user32.dll")] public static extern int GetWindowLong(IntPtr hWnd, int index);
     [DllImport("user32.dll")] public static extern int SetWindowLong(IntPtr hWnd, int index, int value);
     [DllImport("shell32.dll")] static extern int SHQueryUserNotificationState(out int state);
+    [DllImport("user32.dll")] public static extern bool GetCursorPos(out POINT p);
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT r);
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+    [DllImport("user32.dll")] public static extern IntPtr GetKeyboardLayout(uint threadId);
+    [DllImport("user32.dll")] public static extern short GetKeyState(int key);
+    [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(POINT pt, uint flags);
+    [DllImport("shcore.dll")] static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
+    [StructLayout(LayoutKind.Sequential)] struct LASTINPUTINFO { public uint Size, Time; }
+    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
+
+    // Сколько секунд к клавиатуре и мыши никто не прикасался
+    public static double IdleSeconds()
+    {
+        var info = new LASTINPUTINFO { Size = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+        return GetLastInputInfo(ref info) ? (uint)(Environment.TickCount - (int)info.Time) / 1000.0 : 0;
+    }
+
+    // Масштаб экрана (1 = 100 %) монитора, на котором лежит точка в физических пикселях
+    public static double ScaleAt(int x, int y)
+    {
+        try
+        {
+            var m = MonitorFromPoint(new POINT { X = x, Y = y }, 2 /* ближайший */);
+            if (GetDpiForMonitor(m, 0, out uint dpi, out _) == 0) return dpi / 96.0;
+        }
+        catch (Exception) { }
+        return 1;
+    }
 
     // Игра, фильм или презентация во весь экран — остров уходит, чтобы не мешать
     public static bool FullscreenAppActive()

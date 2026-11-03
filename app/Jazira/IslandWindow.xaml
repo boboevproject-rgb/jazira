@@ -1,18 +1,34 @@
 <Window x:Class="Jazira.IslandWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Jazira" Width="480" Height="230"
+        xmlns:local="clr-namespace:Jazira"
+        Title="Jazira" Width="520" Height="260"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize" ShowActivated="False"
         UseLayoutRounding="True" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13"
-        Foreground="#F2F7F6">
+        Foreground="{DynamicResource Fg}">
   <Window.Resources>
+    <!-- Цвета вида (темы): Theme.cs подменяет их на лету, поэтому разметка берёт их через DynamicResource -->
+    <SolidColorBrush x:Key="Fg" Color="#F2F7F6"/>
     <SolidColorBrush x:Key="Dim" Color="#A6F2F7F6"/>
     <SolidColorBrush x:Key="Faint" Color="#6BF2F7F6"/>
+    <SolidColorBrush x:Key="Hover" Color="#26FFFFFF"/>
+    <SolidColorBrush x:Key="Press" Color="#3DFFFFFF"/>
+    <SolidColorBrush x:Key="Chip" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="Track" Color="#26FFFFFF"/>
+    <SolidColorBrush x:Key="IslandBg" Color="#020507"/>
+    <SolidColorBrush x:Key="IslandBorder" Color="#1CFFFFFF"/>
+    <!-- Подсветка цветом обложки: эквалайзер, полоса песни, строка текста -->
+    <SolidColorBrush x:Key="EqFill" Color="#2FD4B8"/>
+    <SolidColorBrush x:Key="ProgFill" Color="#F2F7F6"/>
+    <SolidColorBrush x:Key="LyricFg" Color="#F2F7F6"/>
+
     <SolidColorBrush x:Key="Lagoon" Color="#2FD4B8"/>
     <SolidColorBrush x:Key="Coral" Color="#FF7A59"/>
     <SolidColorBrush x:Key="Sky" Color="#5CC8FF"/>
     <SolidColorBrush x:Key="Green" Color="#2FCF73"/>
+    <SolidColorBrush x:Key="Amber" Color="#FF9F0A"/>
+    <SolidColorBrush x:Key="Violet" Color="#8E7CFF"/>
     <SolidColorBrush x:Key="Muted" Color="#3A4A50"/>
     <LinearGradientBrush x:Key="CoverGradient" StartPoint="0,0" EndPoint="1,1">
       <GradientStop Color="#2FD4B8" Offset="0"/>
@@ -43,10 +59,10 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="Bg" Property="Background" Value="#26FFFFFF"/>
+                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource Hover}"/>
               </Trigger>
               <Trigger Property="IsPressed" Value="True">
-                <Setter TargetName="Bg" Property="Background" Value="#3DFFFFFF"/>
+                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource Press}"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -58,8 +74,8 @@
     <Style x:Key="PillBtn" TargetType="Button">
       <Setter Property="Height" Value="30"/>
       <Setter Property="Padding" Value="14,0"/>
-      <Setter Property="Foreground" Value="#F2F7F6"/>
-      <Setter Property="Background" Value="#1FFFFFFF"/>
+      <Setter Property="Foreground" Value="{DynamicResource Fg}"/>
+      <Setter Property="Background" Value="{DynamicResource Chip}"/>
       <Setter Property="FontSize" Value="12.5"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Cursor" Value="Hand"/>
@@ -80,188 +96,286 @@
         </Setter.Value>
       </Setter>
     </Style>
+
+    <!-- Текстовая кнопка без фона («Очистить») -->
+    <Style x:Key="LinkBtn" TargetType="Button">
+      <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
+      <Setter Property="FontSize" Value="11.5"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bg" Background="Transparent" CornerRadius="8" Padding="6,2">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource Hover}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </Window.Resources>
 
   <!-- Окно прозрачное: сквозь пустые места клики проходят к окнам под ним -->
   <Grid x:Name="Root">
-    <Border x:Name="Island" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
-            Width="196" Height="34" CornerRadius="17" Background="#020507"
-            BorderBrush="#1CFFFFFF" BorderThickness="1"
-            MouseEnter="Island_MouseEnter" MouseLeave="Island_MouseLeave"
-            MouseWheel="Island_MouseWheel" SizeChanged="Island_SizeChanged">
-      <Border.Effect>
-        <DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.45" Color="Black"/>
-      </Border.Effect>
+    <Grid x:Name="ScaleHost">
+      <Border x:Name="Island" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
+              Width="196" Height="34" CornerRadius="17" Background="{DynamicResource IslandBg}"
+              BorderBrush="{DynamicResource IslandBorder}" BorderThickness="1" AllowDrop="True"
+              MouseEnter="Island_MouseEnter" MouseLeave="Island_MouseLeave" MouseWheel="Island_MouseWheel"
+              MouseLeftButtonDown="Island_MouseLeftButtonDown" MouseMove="Island_MouseMove"
+              MouseLeftButtonUp="Island_MouseLeftButtonUp" LostMouseCapture="Island_LostMouseCapture"
+              MouseRightButtonUp="Island_MouseRightButtonUp"
+              DragEnter="Island_DragEnter" DragOver="Island_DragOver" DragLeave="Island_DragLeave" Drop="Island_Drop"
+              SizeChanged="Island_SizeChanged">
+        <Border.Effect>
+          <DropShadowEffect x:Name="Glow" BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.45" Color="Black"/>
+        </Border.Effect>
 
-      <Grid x:Name="Body">
+        <Grid x:Name="Body">
 
-        <!-- ===== Покой: время, слева солнце или эквалайзер, справа заряд или таймер ===== -->
-        <Grid x:Name="IdlePanel" Margin="14,0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <Ellipse x:Name="IdleSun" Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{StaticResource SunGradient}"/>
-          <StackPanel x:Name="IdleEq" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed">
-            <Rectangle x:Name="Eq1" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource Lagoon}" VerticalAlignment="Center" Margin="0,0,2,0"/>
-            <Rectangle x:Name="Eq2" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource Lagoon}" VerticalAlignment="Center" Margin="0,0,2,0"/>
-            <Rectangle x:Name="Eq3" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource Lagoon}" VerticalAlignment="Center" Margin="0,0,2,0"/>
-            <Rectangle x:Name="Eq4" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource Lagoon}" VerticalAlignment="Center"/>
-          </StackPanel>
-          <TextBlock x:Name="IdleTime" Grid.Column="1" Text="18:55" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Path x:Name="IdleBolt" Width="7" Height="11" Stretch="Uniform" Fill="{StaticResource Green}" Margin="0,0,4,0" VerticalAlignment="Center" Visibility="Collapsed"/>
-            <TextBlock x:Name="IdleRight" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
-          </StackPanel>
-        </Grid>
+          <!-- ===== Покой: слева рыбка, солнце или эквалайзер; по центру время или строка песни; справа заряд или таймер ===== -->
+          <Grid x:Name="IdlePanel" Margin="13,0">
+            <Grid HorizontalAlignment="Left" VerticalAlignment="Center">
+              <Ellipse x:Name="IdleSun" Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{StaticResource SunGradient}" Margin="1,0,0,0"/>
+              <StackPanel x:Name="IdleEq" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed">
+                <Rectangle x:Name="Eq1" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource EqFill}" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                <Rectangle x:Name="Eq2" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource EqFill}" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                <Rectangle x:Name="Eq3" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource EqFill}" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                <Rectangle x:Name="Eq4" Width="3" Height="6" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource EqFill}" VerticalAlignment="Center"/>
+              </StackPanel>
+              <local:KoiPond x:Name="IdleKoi" Width="36" Height="26" Compact="True" Margin="-6,0,0,0" Visibility="Collapsed"/>
+            </Grid>
+            <TextBlock x:Name="IdleTime" Text="18:55" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock x:Name="IdleLyric" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource LyricFg}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Margin="34,0,48,0" TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+              <Ellipse x:Name="DotCam" Width="7" Height="7" Fill="{StaticResource Green}" Margin="0,0,5,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+              <Ellipse x:Name="DotMic" Width="7" Height="7" Fill="{StaticResource Amber}" Margin="0,0,6,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+              <Path x:Name="IdleBolt" Width="7" Height="11" Stretch="Uniform" Fill="{StaticResource Green}" Margin="0,0,4,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+              <TextBlock x:Name="IdleRight" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Grid>
 
-        <!-- ===== Музыка ===== -->
-        <Grid x:Name="MusicPanel" Margin="34,14,34,8" Visibility="Collapsed" Opacity="0">
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-          </Grid.RowDefinitions>
-          <Grid>
+          <!-- ===== Музыка ===== -->
+          <Grid x:Name="MusicPanel" Margin="34,14,34,8" Visibility="Collapsed" Opacity="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border x:Name="CoverBox" Width="56" Height="56" CornerRadius="12" Background="{StaticResource CoverGradient}">
+                <Path x:Name="CoverNote" Width="22" Height="22" Stretch="Uniform" Fill="#F2FFFFFF"/>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock x:Name="MusicTitle" FontSize="15.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="MusicArtist" FontSize="12.5" Foreground="{DynamicResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                <TextBlock x:Name="MusicApp" FontSize="11" Foreground="{DynamicResource Faint}" Margin="0,3,0,0"/>
+              </StackPanel>
+            </Grid>
+            <!-- Текст песни: текущая строка и следующая -->
+            <StackPanel x:Name="LyricBlock" Grid.Row="1" Margin="0,11,0,0" Visibility="Collapsed">
+              <TextBlock x:Name="LyricNow" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource LyricFg}" TextTrimming="CharacterEllipsis"/>
+              <TextBlock x:Name="LyricNext" FontSize="12" Foreground="{DynamicResource Faint}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+            </StackPanel>
+            <Grid x:Name="ProgressRow" Grid.Row="2" Margin="0,12,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="38"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="38"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock x:Name="PosText" FontSize="11" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+              <Grid x:Name="ProgTrack" Grid.Column="1" Height="4" Margin="6,0" VerticalAlignment="Center">
+                <Border CornerRadius="2" Background="{DynamicResource Track}"/>
+                <Border x:Name="ProgFill" CornerRadius="2" Background="{DynamicResource ProgFill}" HorizontalAlignment="Left" Width="0"/>
+              </Grid>
+              <TextBlock x:Name="DurText" Grid.Column="2" FontSize="11" Foreground="{DynamicResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
+            <StackPanel x:Name="MusicControls" Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Button Style="{StaticResource IconBtn}" Click="Prev_Click">
+                <Path x:Name="PrevIcon" Width="14" Height="14" Stretch="Uniform" Fill="{DynamicResource Fg}"/>
+              </Button>
+              <Button Style="{StaticResource IconBtn}" Width="38" Height="38" Margin="16,0" Click="PlayPause_Click">
+                <Path x:Name="PlayIcon" Width="16" Height="16" Stretch="Uniform" Fill="{DynamicResource Fg}"/>
+              </Button>
+              <Button Style="{StaticResource IconBtn}" Click="Next_Click">
+                <Path x:Name="NextIcon" Width="14" Height="14" Stretch="Uniform" Fill="{DynamicResource Fg}"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- ===== Полка: файлы, брошенные на остров ===== -->
+          <Grid x:Name="ShelfPanel" Margin="34,10,34,10" Visibility="Collapsed" Opacity="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <TextBlock x:Name="ShelfTitle" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+              <Button x:Name="ShelfClear" Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" Click="ShelfClear_Click">
+                <TextBlock x:Name="ShelfClearText"/>
+              </Button>
+            </Grid>
+            <Grid Grid.Row="1" Margin="0,6,0,0">
+              <Rectangle x:Name="ShelfZone" RadiusX="12" RadiusY="12" StrokeThickness="1.5" StrokeDashArray="4 3" Stroke="{DynamicResource Faint}"/>
+              <TextBlock x:Name="ShelfHint" FontSize="12" Foreground="{DynamicResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                         TextAlignment="Center" TextWrapping="Wrap" Margin="16,0"/>
+              <StackPanel x:Name="ShelfItems" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2,0"/>
+            </Grid>
+          </Grid>
+
+          <!-- ===== Фокус ===== -->
+          <Grid x:Name="FocusPanel" Margin="36,0" Visibility="Collapsed" Opacity="0">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Border x:Name="CoverBox" Width="56" Height="56" CornerRadius="12" Background="{StaticResource CoverGradient}">
-              <Path x:Name="CoverNote" Width="22" Height="22" Stretch="Uniform" Fill="#F2FFFFFF"/>
-            </Border>
-            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-              <TextBlock x:Name="MusicTitle" FontSize="15.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-              <TextBlock x:Name="MusicArtist" FontSize="12.5" Foreground="{StaticResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
-              <TextBlock x:Name="MusicApp" FontSize="11" Foreground="{StaticResource Faint}" Margin="0,3,0,0"/>
+            <Grid x:Name="FocusRing" Width="64" Height="64" VerticalAlignment="Center">
+              <Ellipse x:Name="FocusTrack" Stroke="#38FF7A59" StrokeThickness="6"/>
+              <Ellipse x:Name="FocusArc" Stroke="{StaticResource Coral}" StrokeThickness="6" StrokeDashCap="Round"
+                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                <Ellipse.RenderTransform>
+                  <RotateTransform Angle="-90"/>
+                </Ellipse.RenderTransform>
+              </Ellipse>
+              <Path x:Name="FocusIcon" Width="20" Height="20" Stretch="Uniform" Fill="{StaticResource Coral}"/>
+            </Grid>
+            <StackPanel Grid.Column="1" Margin="16,0,8,0" VerticalAlignment="Center">
+              <TextBlock x:Name="FocusLabel" FontSize="12.5" Foreground="{DynamicResource Dim}"/>
+              <TextBlock x:Name="FocusTime" FontSize="32" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+              <Button x:Name="FocusStartBtn" Style="{StaticResource PillBtn}" Background="{StaticResource Coral}" Foreground="#1C1006" MinWidth="118" Click="FocusStart_Click">
+                <TextBlock x:Name="FocusStartText"/>
+              </Button>
+              <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
+                <Button Style="{StaticResource PillBtn}" Padding="12,0" Click="FocusMode_Click">
+                  <TextBlock x:Name="FocusModeText"/>
+                </Button>
+                <Button Style="{StaticResource IconBtn}" Width="30" Height="30" Margin="6,0,0,0" Background="{DynamicResource Chip}" Click="FocusReset_Click">
+                  <Path x:Name="ResetIcon" Width="13" Height="13" Stretch="Uniform" Stroke="{DynamicResource Fg}" StrokeThickness="2.2"
+                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                </Button>
+              </StackPanel>
             </StackPanel>
           </Grid>
-          <Grid x:Name="ProgressRow" Grid.Row="1" Margin="0,12,0,0">
+
+          <!-- ===== Вода: пруд с рыбкой-кои (или капля, если рыбка выключена) ===== -->
+          <Grid x:Name="WaterPanel" Margin="30,0,34,0" Visibility="Collapsed" Opacity="0">
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="38"/>
+              <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="38"/>
+              <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBlock x:Name="PosText" FontSize="11" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
-            <Grid x:Name="ProgTrack" Grid.Column="1" Height="4" Margin="6,0" VerticalAlignment="Center">
-              <Border CornerRadius="2" Background="#26FFFFFF"/>
-              <Border x:Name="ProgFill" CornerRadius="2" Background="#F2F7F6" HorizontalAlignment="Left" Width="0"/>
+            <Grid VerticalAlignment="Center">
+              <Path x:Name="WaterDrop" Width="32" Height="40" Stretch="Uniform" Fill="{StaticResource Sky}" Margin="6,0,0,0"/>
+              <local:KoiPond x:Name="WaterKoi" Width="86" Height="72" Visibility="Collapsed"/>
             </Grid>
-            <TextBlock x:Name="DurText" Grid.Column="2" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-          </Grid>
-          <StackPanel x:Name="MusicControls" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Button Style="{StaticResource IconBtn}" Click="Prev_Click">
-              <Path x:Name="PrevIcon" Width="14" Height="14" Stretch="Uniform" Fill="#F2F7F6"/>
-            </Button>
-            <Button Style="{StaticResource IconBtn}" Width="38" Height="38" Margin="16,0" Click="PlayPause_Click">
-              <Path x:Name="PlayIcon" Width="16" Height="16" Stretch="Uniform" Fill="#F2F7F6"/>
-            </Button>
-            <Button Style="{StaticResource IconBtn}" Click="Next_Click">
-              <Path x:Name="NextIcon" Width="14" Height="14" Stretch="Uniform" Fill="#F2F7F6"/>
-            </Button>
-          </StackPanel>
-        </Grid>
-
-        <!-- ===== Фокус ===== -->
-        <Grid x:Name="FocusPanel" Margin="36,0" Visibility="Collapsed" Opacity="0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Grid x:Name="FocusRing" Width="64" Height="64" VerticalAlignment="Center">
-            <Ellipse x:Name="FocusTrack" Stroke="#38FF7A59" StrokeThickness="6"/>
-            <Ellipse x:Name="FocusArc" Stroke="{StaticResource Coral}" StrokeThickness="6" StrokeDashCap="Round"
-                     StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
-              <Ellipse.RenderTransform>
-                <RotateTransform Angle="-90"/>
-              </Ellipse.RenderTransform>
-            </Ellipse>
-            <Path x:Name="FocusIcon" Width="20" Height="20" Stretch="Uniform" Fill="{StaticResource Coral}"/>
-          </Grid>
-          <StackPanel Grid.Column="1" Margin="16,0,8,0" VerticalAlignment="Center">
-            <TextBlock x:Name="FocusLabel" FontSize="12.5" Foreground="{StaticResource Dim}"/>
-            <TextBlock x:Name="FocusTime" FontSize="32" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI"/>
-          </StackPanel>
-          <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <Button x:Name="FocusStartBtn" Style="{StaticResource PillBtn}" Background="{StaticResource Coral}" Foreground="#1C1006" MinWidth="118" Click="FocusStart_Click">
-              <TextBlock x:Name="FocusStartText"/>
-            </Button>
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
-              <Button Style="{StaticResource PillBtn}" Padding="12,0" Click="FocusMode_Click">
-                <TextBlock x:Name="FocusModeText"/>
+            <StackPanel Grid.Column="1" Margin="16,0,14,0" VerticalAlignment="Center">
+              <TextBlock>
+                <Run x:Name="WaterNow" FontSize="26" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI"/><Run x:Name="WaterGoalRun" FontSize="13" Foreground="{DynamicResource Dim}"/>
+              </TextBlock>
+              <Grid x:Name="WaterTrack" Height="6" Margin="0,7,0,0">
+                <Border CornerRadius="3" Background="{DynamicResource Track}"/>
+                <Border x:Name="WaterFill" CornerRadius="3" Background="{StaticResource WaterGradient}" HorizontalAlignment="Left" Width="0"/>
+              </Grid>
+              <TextBlock x:Name="WaterNote" FontSize="11.5" Foreground="{DynamicResource Dim}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+              <Button Style="{StaticResource PillBtn}" Background="#1F7FD8" Foreground="#FFFFFF" MinWidth="96" Click="Water250_Click">
+                <TextBlock x:Name="Water250Text"/>
               </Button>
-              <Button Style="{StaticResource IconBtn}" Width="30" Height="30" Margin="6,0,0,0" Background="#1FFFFFFF" Click="FocusReset_Click">
-                <Path x:Name="ResetIcon" Width="13" Height="13" Stretch="Uniform" Stroke="#F2F7F6" StrokeThickness="2.2"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+              <Button Style="{StaticResource PillBtn}" MinWidth="96" Margin="0,8,0,0" Click="WaterUndo_Click">
+                <TextBlock x:Name="WaterUndoText"/>
               </Button>
             </StackPanel>
-          </StackPanel>
-        </Grid>
+          </Grid>
 
-        <!-- ===== Вода ===== -->
-        <Grid x:Name="WaterPanel" Margin="36,0" Visibility="Collapsed" Opacity="0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Path x:Name="WaterDrop" Width="32" Height="40" Stretch="Uniform" Fill="{StaticResource Sky}" VerticalAlignment="Center"/>
-          <StackPanel Grid.Column="1" Margin="16,0,14,0" VerticalAlignment="Center">
-            <TextBlock>
-              <Run x:Name="WaterNow" FontSize="26" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI"/><Run x:Name="WaterGoalRun" FontSize="13" Foreground="{StaticResource Dim}"/>
-            </TextBlock>
-            <Grid x:Name="WaterTrack" Height="6" Margin="0,7,0,0">
-              <Border CornerRadius="3" Background="#26FFFFFF"/>
-              <Border x:Name="WaterFill" CornerRadius="3" Background="{StaticResource WaterGradient}" HorizontalAlignment="Left" Width="0"/>
-            </Grid>
-            <TextBlock x:Name="WaterNote" FontSize="11.5" Foreground="{StaticResource Dim}" Margin="0,6,0,0"/>
-          </StackPanel>
-          <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <Button Style="{StaticResource PillBtn}" Background="#1F7FD8" MinWidth="96" Click="Water250_Click">
-              <TextBlock x:Name="Water250Text"/>
-            </Button>
-            <Button Style="{StaticResource PillBtn}" MinWidth="96" Margin="0,8,0,0" Click="WaterUndo_Click">
-              <TextBlock x:Name="WaterUndoText"/>
-            </Button>
-          </StackPanel>
-        </Grid>
+          <!-- ===== Сегодня: погода, курс сомони, следующий намаз ===== -->
+          <Grid x:Name="LocalPanel" Margin="36,0" Visibility="Collapsed" Opacity="0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition x:Name="PrayerCol" Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal">
+                <Path x:Name="WxIcon" Width="24" Height="24" Stretch="Uniform" Fill="{StaticResource SunGradient}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="WxTemp" FontSize="24" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display, Segoe UI" Margin="8,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+              <TextBlock x:Name="WxCity" FontSize="12" FontWeight="SemiBold" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+              <TextBlock x:Name="WxText" FontSize="11" Foreground="{DynamicResource Dim}" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+            <Border Grid.Column="1" BorderBrush="{DynamicResource Track}" BorderThickness="1,0,0,0" Padding="14,0,0,0" Margin="8,14">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="RateUsd" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="RateRub" FontSize="13" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="RateNote" FontSize="11" Foreground="{DynamicResource Faint}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+            </Border>
+            <Border x:Name="PrayerBlock" Grid.Column="2" BorderBrush="{DynamicResource Track}" BorderThickness="1,0,0,0" Padding="14,0,0,0" Margin="8,14,0,14">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="PrayerLabel" FontSize="11" Foreground="{DynamicResource Dim}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="PrayerNext" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="PrayerIn" FontSize="11" Foreground="{DynamicResource Faint}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+            </Border>
+          </Grid>
 
-        <!-- ===== Короткое уведомление («пик») ===== -->
-        <Grid x:Name="PeekPanel" Margin="8,0,14,0" Visibility="Collapsed" Opacity="0">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Border x:Name="PeekIconBox" Width="28" Height="28" CornerRadius="14" VerticalAlignment="Center">
-            <Path x:Name="PeekIcon" Width="13" Height="15" Stretch="Uniform" Fill="#FFFFFF"/>
-          </Border>
-          <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
-            <TextBlock x:Name="PeekTitle" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-            <TextBlock x:Name="PeekSub" FontSize="11" Foreground="{StaticResource Dim}" TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
-          </StackPanel>
-          <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-            <TextBlock x:Name="PeekRight" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button x:Name="PeekAction" Style="{StaticResource PillBtn}" Background="#1F7FD8" Visibility="Collapsed" Click="PeekAction_Click">
-              <TextBlock x:Name="PeekActionText"/>
-            </Button>
-          </StackPanel>
-        </Grid>
+          <!-- ===== Короткое уведомление («пик») ===== -->
+          <Grid x:Name="PeekPanel" Margin="8,0,14,0" Visibility="Collapsed" Opacity="0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="PeekIconBox" Width="28" Height="28" CornerRadius="14" VerticalAlignment="Center">
+              <Path x:Name="PeekIcon" Width="14" Height="15" Stretch="Uniform" Fill="#FFFFFF"/>
+            </Border>
+            <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
+              <TextBlock x:Name="PeekTitle" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+              <TextBlock x:Name="PeekSub" FontSize="11" Foreground="{DynamicResource Dim}" TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
+              <Grid x:Name="PeekBarTrack" Height="4" Margin="0,6,0,0" Visibility="Collapsed">
+                <Border CornerRadius="2" Background="{DynamicResource Track}"/>
+                <Border x:Name="PeekBarFill" CornerRadius="2" Background="{DynamicResource Fg}" RenderTransformOrigin="0,0.5">
+                  <Border.RenderTransform>
+                    <ScaleTransform x:Name="PeekBarScale" ScaleX="0.5"/>
+                  </Border.RenderTransform>
+                </Border>
+              </Grid>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock x:Name="PeekRight" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Button x:Name="PeekAction" Style="{StaticResource PillBtn}" Background="#1F7FD8" Foreground="#FFFFFF" Visibility="Collapsed" Click="PeekAction_Click">
+                <TextBlock x:Name="PeekActionText"/>
+              </Button>
+            </StackPanel>
+          </Grid>
 
-        <!-- ===== Стрелки между страницами (видны в раскрытом острове) ===== -->
-        <Grid x:Name="NavLayer" Visibility="Collapsed">
-          <Button Style="{StaticResource IconBtn}" Width="26" Height="26" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,0,0,0" Click="NavLeft_Click">
-            <Path x:Name="NavLeftIcon" Width="8" Height="12" Stretch="Uniform" Stroke="#A6F2F7F6" StrokeThickness="2.2"
-                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-          </Button>
-          <Button Style="{StaticResource IconBtn}" Width="26" Height="26" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" Click="NavRight_Click">
-            <Path x:Name="NavRightIcon" Width="8" Height="12" Stretch="Uniform" Stroke="#A6F2F7F6" StrokeThickness="2.2"
-                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-          </Button>
+          <!-- ===== Стрелки между страницами (видны в раскрытом острове) ===== -->
+          <Grid x:Name="NavLayer" Visibility="Collapsed">
+            <Button Style="{StaticResource IconBtn}" Width="26" Height="26" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,0,0,0" Click="NavLeft_Click">
+              <Path x:Name="NavLeftIcon" Width="8" Height="12" Stretch="Uniform" Stroke="{DynamicResource Dim}" StrokeThickness="2.2"
+                    StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+            </Button>
+            <Button Style="{StaticResource IconBtn}" Width="26" Height="26" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" Click="NavRight_Click">
+              <Path x:Name="NavRightIcon" Width="8" Height="12" Stretch="Uniform" Stroke="{DynamicResource Dim}" StrokeThickness="2.2"
+                    StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+            </Button>
+          </Grid>
         </Grid>
-      </Grid>
-    </Border>
+      </Border>
+    </Grid>
   </Grid>
 </Window>

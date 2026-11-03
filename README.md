@@ -10,9 +10,10 @@
 
 **Сайт онлайн: https://boboevproject-rgb.github.io/jazira/**
 
-**Само приложение для Windows** (версия 0.1: музыка, таймер фокуса, вода, уведомления) — в папке
-[`app/`](app/README.md): исходники, сборка, установка.
-Скачать: **[Jazira 0.1.0 — ранняя версия](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
+**Само приложение для Windows** — в папке [`app/`](app/README.md): исходники, сборка, установка.
+В исходниках уже версия 0.2: темы, остров можно открепить от верха экрана, полка для файлов,
+тексты песен в такт, рыбка-кои, индикаторы, погода и курс сомони, автообновление.
+Скачать пока можно **[Jazira 0.1.0 — ранняя версия](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
 
 ![Jazira](assets/og.png)
 
@@ -110,8 +111,10 @@ python tools/render_assets.py       # пересобрать icon-*.png и og.pn
 ships, the site collects a waitlist. Languages: Russian, English, Tajik. Plain HTML + CSS + JS,
 no build step, no dependencies. Licensed under [MIT](LICENSE).
 
-**Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** (v0.1) lives in
-[`app/`](app/README.md). Download: **[v0.1.0 early release](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
+**Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** lives in
+[`app/`](app/README.md); the source is already at v0.2 (themes, detachable island, file shelf, synced
+lyrics, koi, indicators, weather and somoni rates, auto-update). Download for now:
+**[v0.1.0 early release](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.1.0)**.
 
 ### Quick start
 
