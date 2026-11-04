@@ -38,6 +38,22 @@ public partial class App : Application
             return;
         }
 
+        // Остров рисуется без видеокарты: окно маленькое, а драйвер видеокарты держит ~140 МБ памяти.
+        // Замер на ноутбуке с Intel Iris Xe: личная память 75 МБ вместо 214, процессор даже чуть ниже
+        // (свёрнут 2,3 % ядра вместо 2,6 %, раскрыт с рыбкой 9,0 % вместо 9,9 %). --gpu-render — по-старому.
+        if (Array.IndexOf(e.Args, "--gpu-render") < 0)
+            System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
+        // Jazira.exe --video <папка> <ffmpeg.exe> <ru|en|tg>: ролик для сайта (Snapshot.Video)
+        int video = Array.IndexOf(e.Args, "--video");
+        if (video >= 0 && video + 3 < e.Args.Length)
+        {
+            try { Snapshot.Video(e.Args[video + 1], e.Args[video + 2], e.Args[video + 3]); }
+            catch (Exception ex) { File.AppendAllText(Path.Combine(e.Args[video + 1], "video.txt"), ex + Environment.NewLine); }
+            Shutdown();
+            return;
+        }
+
         // Jazira.exe --live-test <папка>: живая проверка рядом с вашим островом (IslandWindow.Test.cs)
         int live = Array.IndexOf(e.Args, "--live-test");
         if (live >= 0)

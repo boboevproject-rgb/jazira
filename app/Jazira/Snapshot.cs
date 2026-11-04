@@ -38,6 +38,84 @@ static class Snapshot
         w.Close();
     }
 
+    // Ролик для сайта: настоящий остров с настоящими анимациями (пружины, рыбки, переходы страниц)
+    // на подставных данных — ваша музыка, файлы и задачи в ролик не попадают. Кадры идут в ffmpeg
+    // по трубе; если кадр снят позже срока, он повторяется, и время в ролике совпадает с настоящим.
+    public static void Video(string dir, string ffmpeg, string lang)
+    {
+        Directory.CreateDirectory(dir);
+        AppState.ReadOnly = true;
+        var trace = Path.Combine(dir, "video.txt");
+        void Trace(string s) => File.AppendAllText(trace, $"{DateTime.Now:HH:mm:ss.fff} {s}{Environment.NewLine}");
+        // Один язык на запуск: второе окно в том же процессе после первого зависало на записи кадров
+        {
+            Trace($"{lang}: window");
+            var w = new IslandWindow(snapshot: true) { Left = -4000, Top = -4000 };
+            w.Root.Background = Wallpaper();
+            w.Show();
+            w.EnableMotion();
+            var states = w.SnapshotStates(FakeCover(), new[] { lang }).ToDictionary(s => s.Item1, s => s.Item2);
+            var script = new (string State, double Seconds)[]
+            {
+                ($"{lang}-idle-two", 2.2), ($"{lang}-music-lyrics", 3.4), ($"{lang}-day-calendar", 3.4),
+                ($"{lang}-shelf", 2.6), ($"{lang}-water-two", 3.6), ($"{lang}-sys", 3.0),
+                ($"{lang}-idle-two", 1.4), ($"{lang}-peek-download", 3.0), ($"{lang}-idle-two", 1.8),
+            };
+            const int fps = 30;
+            const double k = 2;
+            w.UpdateLayout();
+            int pw = (int)(w.Root.ActualWidth * k), ph = (int)(w.Root.ActualHeight * k);
+            var mp4 = Path.Combine(dir, $"jazira-{lang}.mp4");
+            var psi = new System.Diagnostics.ProcessStartInfo(ffmpeg,
+                $"-y -loglevel error -f rawvideo -pix_fmt bgra -s {pw}x{ph} -framerate {fps} -i - " +
+                $"-vf format=yuv420p -c:v libx264 -preset slow -crf 23 -movflags +faststart -an \"{mp4}\"")
+            { RedirectStandardInput = true, UseShellExecute = false, CreateNoWindow = true };
+            Trace($"{lang}: ffmpeg");
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var stdin = proc.StandardInput.BaseStream;
+            var rtb = new RenderTargetBitmap(pw, ph, 96 * k, 96 * k, PixelFormats.Pbgra32);
+            var buf = new byte[pw * ph * 4];
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            long written = 0, captured = 0;
+            foreach (var (state, seconds) in script)
+            {
+                Trace($"{lang}: {state}");
+                states[state]();
+                double end = clock.Elapsed.TotalSeconds + seconds;
+                while (clock.Elapsed.TotalSeconds < end)
+                {
+                    Pump(12);
+                    rtb.Clear();
+                    rtb.Render(w.Root);
+                    rtb.CopyPixels(buf, pw * 4, 0);
+                    captured++;
+                    long due = (long)(clock.Elapsed.TotalSeconds * fps) + 1;
+                    while (written < due) { stdin.Write(buf); written++; }
+                }
+            }
+            Trace($"{lang}: closing ffmpeg");
+            stdin.Close();
+            proc.WaitForExit();
+            File.AppendAllText(trace,
+                $"{lang}: {written} frames ({written / (double)fps:0.0} s), {captured} captured, {pw}x{ph}, exit {proc.ExitCode}{Environment.NewLine}");
+            Trace($"{lang}: close window");
+            w.Close();
+            Trace($"{lang}: closed");
+        }
+    }
+
+    // «Рабочий стол» под островом — те же цвета заката, что и на сайте
+    static Brush Wallpaper()
+    {
+        var g = new LinearGradientBrush { StartPoint = new Point(0, 0), EndPoint = new Point(0, 1) };
+        g.GradientStops.Add(new GradientStop(Color.FromRgb(0x0A, 0x1B, 0x26), 0));
+        g.GradientStops.Add(new GradientStop(Color.FromRgb(0x12, 0x30, 0x3F), 0.45));
+        g.GradientStops.Add(new GradientStop(Color.FromRgb(0x4B, 0x4A, 0x53), 0.82));
+        g.GradientStops.Add(new GradientStop(Color.FromRgb(0xD9, 0x82, 0x57), 1));
+        g.Freeze();
+        return g;
+    }
+
     static void Save(IslandWindow w, string path)
     {
         const double dpi = 192, k = dpi / 96;

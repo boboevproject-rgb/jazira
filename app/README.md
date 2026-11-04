@@ -120,12 +120,17 @@ Jazira читает календарь по секретной ссылке в �
 Скачанное, снимки экрана, задачи, таймеры и «Система» работают только на компьютере и в интернет
 ничего не отправляют.
 
-Нагрузка (замер на ноутбуке автора, 16 потоков, остров свёрнут, рыбка включена):
+Нагрузка (замер на ноутбуке автора: Intel Iris Xe, 16 потоков, рыбка включена; процент — от одного ядра):
 
-| Версия | Процессор | Память (личная) |
-|---|---|---|
-| 0.3.0, через минуту после запуска | 0,2 % всего процессора — около 3 % одного ядра | около 210 МБ |
-| 0.2.0, после нескольких часов работы | 0,16 % — около 2,6 % одного ядра | около 300 МБ |
+| Версия | Свёрнут | Раскрыт, пруд с рыбкой | Память (личная) |
+|---|---|---|---|
+| 0.3.0 (рисует процессор — так по умолчанию) | около 2,3 % | около 9 % | около 75 МБ |
+| 0.3.0 с ключом `--gpu-render` (рисует видеокарта) | около 2,6 % | около 10 % | около 215 МБ |
+| 0.2.0, после нескольких часов работы | около 2,6 % | — | около 300 МБ |
+
+Остров маленький, поэтому с 0.3 его рисует процессор: видеокарте не нужно держать свои буферы,
+памяти уходит втрое меньше, а процессор занят даже чуть меньше. Если на вашем компьютере остров
+вдруг рисуется хуже, запустите `Jazira.exe --gpu-render` — будет по-старому.
 
 Страница «Система» опрашивает память, сеть и датчики только пока открыта; первый запрос к датчикам
 нагрева после запуска занимает несколько секунд (так устроена Windows), дальше — сотые доли секунды.
@@ -190,8 +195,16 @@ Jazira.exe --live-test <папка>
 Живая проверка рядом с уже запущенным островом: окно стоит за краем экрана, настройки не сохраняются,
 буфер обмена и ваши папки не трогаются. Проверяет горячие клавиши на настоящем окне, что остров
 не попадает в снимок экрана (на 0,4 с встаёт в правый нижний угол), настоящий календарь Google по
-публичной ссылке праздников, батарею и нагрев, а потом 70 секунд работает в покое — можно мерить
-процессор и память. Итог — в `live-test.txt`.
+публичной ссылке праздников, батарею и нагрев, а потом 70 секунд работает в покое (вторую половину —
+раскрытым на пруду с рыбкой) — можно мерить процессор. Память пишет сам. Итог — в `live-test.txt`.
+
+```bash
+Jazira.exe --video <папка> <путь к ffmpeg.exe> <ru|en|tg>
+```
+
+Ролик для сайта: 25 секунд острова на подставных данных, но с настоящими анимациями (покой, музыка
+с текстом, «Мой день», полка, вода с рыбкой, «Система», уведомление о скачанном). Кадры уходят
+в ffmpeg, на выходе `jazira-<язык>.mp4` 1040×520 и строчка в `video.txt`. Один язык за запуск.
 
 ## Устройство
 
@@ -203,7 +216,7 @@ Jazira/IslandWindow.Place.cs     место на экране, перетаск�
 Jazira/IslandWindow.Shelf.cs     полка: перетаскивание, скачанное и снимки экрана, Ctrl+PrtScn
 Jazira/IslandWindow.Day.cs       «Мой день»: задачи, таймеры, встреча из календаря, Рамазан
 Jazira/IslandWindow.Sys.cs       «Система», батарея 10 %, Ctrl+Alt+J и управление с клавиатуры
-Jazira/IslandWindow.Test.cs      режим --live-test
+Jazira/IslandWindow.Test.cs      режим --live-test и движение для --video
 Jazira/IslandWindow.Live.cs      тексты, эквалайзер, индикаторы, «Сегодня», намаз, режим снимков
 Jazira/Theme.cs                  пять тем
 Jazira/Motion.cs                 пружинная анимация, цвет обложки
@@ -229,7 +242,7 @@ Jazira/AppState.cs               настройки, журнал воды, по
 Jazira/Strings.cs                тексты на ru / en / tg
 Jazira/TrayIcon.cs               меню в трее и по правому клику
 Jazira/Platform.cs               стиль окна, полноэкранные приложения, автозапуск, сигнал
-Jazira/Snapshot.cs               режим --snapshot
+Jazira/Snapshot.cs               режимы --snapshot и --video
 install.bat, uninstall.bat       установка и удаление для текущего пользователя
 ```
 
@@ -301,4 +314,10 @@ the same way. From 0.2 on, Jazira updates itself (0.2 offers 0.3 on its own).
 - `Jazira-X.Y.Z-win-x64.zip.sha256` next to it, or the hash in the release notes.
 
 **Build:** .NET 9 SDK, `dotnet build Jazira/Jazira.csproj -c Release`; see the publish command above for
-a single self-contained `Jazira.exe`. `Jazira.exe --snapshot <dir>` renders every island state to PNG.
+a single self-contained `Jazira.exe`. `Jazira.exe --snapshot <dir>` renders every island state to PNG;
+`--live-test <dir>` checks hotkeys, capture exclusion, a real calendar, battery and heat next to your running
+island; `--video <dir> <ffmpeg.exe> <ru|en|tg>` renders the 25-second site video.
+
+**Footprint (0.3):** about 75 MB of private memory and ~2% of one core while collapsed. The island is drawn
+by the CPU, which on the author's laptop uses three times less memory than the GPU path and slightly less CPU;
+`Jazira.exe --gpu-render` brings back GPU rendering.

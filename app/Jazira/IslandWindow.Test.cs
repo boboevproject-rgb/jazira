@@ -17,6 +17,14 @@ public partial class IslandWindow
 {
     public bool TestOffscreen { get; init; }
 
+    // Видео для сайта (--video): подставные данные из режима снимков, но с настоящими анимациями
+    public void EnableMotion()
+    {
+        _instant = false;
+        _fast.Tick += (_, _) => OnFast();
+        UpdateFast();
+    }
+
     public async Task RunLiveTest(string dir, int idleSeconds)
     {
         var log = new StringBuilder();
@@ -70,7 +78,17 @@ public partial class IslandWindow
         Log($"heat: known={_sysmon.HeatKnown}, temp={(_sysmon.TempC is double t ? $"{t:0.0}" : "hidden (sensor looks static)")}, throttling={_sysmon.Throttling}, query {sw.ElapsedMilliseconds} ms");
 
         Log($"idle for {idleSeconds} s, pid {Environment.ProcessId}");
-        await Task.Delay(idleSeconds * 1000);
+        await Task.Delay(idleSeconds * 1000 / 2);
+        Expand("water"); // самая тяжёлая для отрисовки страница — большой пруд с рыбкой
+        Log("expanded: water page");
+        await Task.Delay(idleSeconds * 1000 / 2);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        var gc = GC.GetGCMemoryInfo();
+        using var self = Process.GetCurrentProcess();
+        Log($"memory: private {self.PrivateMemorySize64 >> 20} MB, working set {self.WorkingSet64 >> 20} MB, " +
+            $"managed heap {gc.HeapSizeBytes >> 20} MB (committed {gc.TotalCommittedBytes >> 20} MB), " +
+            $"modules {self.Modules.Count}, threads {self.Threads.Count}");
         Log("done");
     }
 

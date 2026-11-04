@@ -70,7 +70,7 @@ public partial class IslandWindow : Window
     readonly DispatcherTimer _peekEnd = new();
     readonly Stopwatch _clock = Stopwatch.StartNew();
     readonly DateTime _startedAt = DateTime.Now;
-    readonly bool _instant; // снимки: без анимаций
+    bool _instant; // снимки: без анимаций (видео для сайта включает их обратно — EnableMotion)
     Mode _mode = Mode.Idle;
     int _page;
     int _lastMinute = -1;

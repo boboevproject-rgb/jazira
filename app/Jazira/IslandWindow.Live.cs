@@ -275,7 +275,7 @@ public partial class IslandWindow
 
     // ---- Снимки всех состояний (Jazira.exe --snapshot) ------------------------------------------
 
-    internal IEnumerable<(string Name, Action Setup)> SnapshotStates(BitmapSource cover)
+    internal IEnumerable<(string Name, Action Setup)> SnapshotStates(BitmapSource cover, string[]? langs = null)
     {
         var st = AppState.Current;
         var lines = new LyricLine[]
@@ -284,7 +284,6 @@ public partial class IslandWindow
             new(TimeSpan.FromSeconds(76), "Morning tide will find our way"),
             new(TimeSpan.FromSeconds(92), "Hold the light and let it stay"),
         };
-        var shelf = new List<string> { @"C:\Docs\Отчёт за октябрь.pdf", @"C:\Docs\photo-dushanbe.jpg", @"C:\Docs\Презентация.pptx", @"C:\Docs\budget.xlsx" };
 
         void Base(string lang)
         {
@@ -318,26 +317,34 @@ public partial class IslandWindow
         void Lyrics() { _lyrics.Fake(lines); _lyricIndex = 1; }
         void Water(int ml, double hoursAgo) { st.WaterLog[AppState.Today] = ml; st.LastDrink = DateTime.Now.AddHours(-hoursAgo); }
         void Pet(int age, int streak, bool today, int gap = 2) => FakePet(age, streak, today, gap);
+        // Подставные тексты на языке снимка: ru, en (для ролика на сайте), tg
+        static string L(string lang, string ru, string en, string tg) => lang == "tg" ? tg : lang == "en" ? en : ru;
+        List<string> ShelfFiles(string lang) => new()
+        {
+            L(lang, @"C:\Docs\Отчёт за октябрь.pdf", @"C:\Docs\October report.pdf", @"C:\Docs\Ҳисоботи октябр.pdf"),
+            @"C:\Docs\photo-dushanbe.jpg",
+            L(lang, @"C:\Docs\Презентация.pptx", @"C:\Docs\Pitch deck.pptx", @"C:\Docs\Презентатсия.pptx"),
+            @"C:\Docs\budget.xlsx",
+        };
         void Tasks(string lang, int extra = 0)
         {
             var now = DateTime.Now;
-            bool tg = lang == "tg";
             st.Tasks = new List<TaskItem>
             {
-                new() { Text = tg ? "Ба модар занг задан" : "Позвонить маме", Due = now.Date.AddHours(now.Hour + 2).AddMinutes(30) },
-                new() { Text = tg ? "Пардохти интернет" : "Оплатить интернет", Due = now.AddMinutes(-25), Reminded = true },
-                new() { Text = tg ? "Нон харидан" : "Купить хлеб" },
-                new() { Text = tg ? "Вохӯрӣ дар бонк" : "Встреча в банке", Due = now.Date.AddDays(1).AddHours(10) },
-                new() { Text = tg ? "Ҳисобот фиристодан" : "Отправить отчёт", Done = true, DoneAt = now.AddHours(-1) },
+                new() { Text = L(lang, "Позвонить маме", "Call mom", "Ба модар занг задан"), Due = now.Date.AddHours(now.Hour + 2).AddMinutes(30) },
+                new() { Text = L(lang, "Оплатить интернет", "Pay the internet bill", "Пардохти интернет"), Due = now.AddMinutes(-25), Reminded = true },
+                new() { Text = L(lang, "Купить хлеб", "Buy bread", "Нон харидан") },
+                new() { Text = L(lang, "Встреча в банке", "Meeting at the bank", "Вохӯрӣ дар бонк"), Due = now.Date.AddDays(1).AddHours(10) },
+                new() { Text = L(lang, "Отправить отчёт", "Send the report", "Ҳисобот фиристодан"), Done = true, DoneAt = now.AddHours(-1) },
             };
-            for (int i = 0; i < extra; i++) st.Tasks.Add(new() { Text = (tg ? "Вазифа " : "Задача ") + (i + 1) });
+            for (int i = 0; i < extra; i++) st.Tasks.Add(new() { Text = L(lang, "Задача ", "Task ", "Вазифа ") + (i + 1) });
         }
         void Calendar(string lang, bool soon = true)
         {
             st.CalendarUrl = "https://example.com/fake.ics"; // только в памяти: снимки не сохраняют настройки
             var now = DateTime.Now;
             var start = soon ? now.AddMinutes(12) : now.AddMinutes(-20);
-            _cal.Fake(new[] { new CalEvent("s", lang == "tg" ? "Мулоқот бо даста" : "Созвон с командой", start, start.AddMinutes(45), false, "https://meet.google.com/abc-defg-hij") });
+            _cal.Fake(new[] { new CalEvent("s", L(lang, "Созвон с командой", "Team call", "Мулоқот бо даста"), start, start.AddMinutes(45), false, "https://meet.google.com/abc-defg-hij") });
         }
         void Timers()
         {
@@ -350,7 +357,7 @@ public partial class IslandWindow
             };
         }
 
-        foreach (var lang in new[] { "ru", "tg" })
+        foreach (var lang in langs ?? new[] { "ru", "tg" })
         {
             yield return ($"{lang}-idle", () => { Base(lang); Collapse(); });
             yield return ($"{lang}-idle-thirsty", () => { Base(lang); Water(250, 3.5); Collapse(); });
@@ -374,10 +381,10 @@ public partial class IslandWindow
             yield return ($"{lang}-idle-timer", () => { Base(lang); Timers(); Collapse(); });
             yield return ($"{lang}-peek-task", () => { Base(lang); Collapse(); Alert("task", Res("Violet"), TaskGeo, lang == "tg" ? "Ба модар занг задан" : "Позвонить маме", Strings.Format("task.remind", "18:30"), 15, Strings.Get("task.done"), () => { }); });
             yield return ($"{lang}-peek-timer", () => { Base(lang); Collapse(); Alert("timer", Res("Amber"), WatchGeo, Strings.Format("timer.done", Strings.Format("timer.min", 10)), "", 10); });
-            yield return ($"{lang}-shelf", () => { Base(lang); st.Shelf = new List<string>(shelf); Expand("shelf"); });
+            yield return ($"{lang}-shelf", () => { Base(lang); st.Shelf = ShelfFiles(lang); Expand("shelf"); });
             yield return ($"{lang}-shelf-empty", () => { Base(lang); Expand("shelf"); });
             yield return ($"{lang}-shelf-drop", () => { Base(lang); _dropHover = true; Expand("shelf"); });
-            yield return ($"{lang}-peek-download", () => { Base(lang); Collapse(); DownloadPeek(lang == "tg" ? "Шартнома.pdf" : "Договор аренды.pdf", 2_457_600, 1, null); });
+            yield return ($"{lang}-peek-download", () => { Base(lang); Collapse(); DownloadPeek(L(lang, "Договор аренды.pdf", "Lease agreement.pdf", "Шартнома.pdf"), 2_457_600, 1, null); });
             yield return ($"{lang}-peek-download-long", () => { Base(lang); Collapse(); DownloadPeek("Отчёт_по_проекту_Jazira_ноябрь_2026_финальная_версия.docx", 734_003, 1, null); });
             yield return ($"{lang}-peek-download-exe", () => { Base(lang); Collapse(); DownloadPeek("JaziraSetup-0.3.0.exe", 61_865_984, 1, null); });
             yield return ($"{lang}-peek-downloads", () => { Base(lang); Collapse(); DownloadPeek("a.jpg", 1, 3, null); });
