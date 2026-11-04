@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.locale.1.10.0.schema.json
+
+PackageIdentifier: Bilol.Jazira
+PackageVersion: 0.3.1
+PackageLocale: ru-RU
+Publisher: Bilol
+PublisherUrl: https://github.com/boboevproject-rgb
+PublisherSupportUrl: https://boboevproject-rgb.github.io/jazira/?lang=ru#feedback
+Author: Bilol
+PackageName: Jazira
+PackageUrl: https://boboevproject-rgb.github.io/jazira/?lang=ru
+License: MIT
+LicenseUrl: https://github.com/boboevproject-rgb/jazira/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Bilol
+ShortDescription: "Маленький остров наверху экрана Windows: музыка, тексты песен, таймеры, вода, файлы и задачи."
+Description: |-
+  Jazira живёт у верхнего края Windows. Наведите курсор — остров раскроется: что играет в любом плеере и текст песни в такт,
+  «Мой день» с задачами, несколькими таймерами и ближайшей встречей по секретной iCal-ссылке, полка, куда сами ложатся
+  скачанные файлы и снимки экрана, таймер фокуса, вода с рыбкой-кои, которая растёт в дни, когда вы выпили норму,
+  и страница «Система»: процессор, память, нагрев, сеть и износ батареи. Уберите курсор — остров снова станет тихой полоской.
+  Всё хранится на вашем компьютере: без аккаунтов, рекламы и слежки. Ctrl+Alt+J открывает остров, Ctrl+PrtScn снимает экран.
+  После установки один раз запустите «jazira»; настройки и автозапуск — в значке у часов.
+Tags:
+- dynamic-island
+- island
+- lyrics
+- music
+- pomodoro
+- productivity
+- screenshot
+- system-monitor
+- timer
+- water-reminder
+ReleaseNotes: |-
+  - Автоскрытие («Расположение» → «Прятать — показывать при наведении»): остров уезжает за верхний край и оставляет тонкую полоску; курсор к полоске — остров выезжает.
+  - Уведомления, Ctrl+Alt+J и файл, который тащат к полоске, показывают остров сами; спрятанный остров пропускает щелчки к окнам под ним.
+  - По умолчанию выключено.
+ReleaseNotesUrl: https://github.com/boboevproject-rgb/jazira/releases/tag/v0.3.1
+ManifestType: locale
+ManifestVersion: 1.10.0

@@ -22,10 +22,10 @@ winget install Bilol.Jazira
 2. Проверить манифест:
 
    ```bash
-   winget validate --manifest app/winget/manifests/b/Bilol/Jazira/0.3.0
+   winget validate --manifest app/winget/manifests/b/Bilol/Jazira/0.3.1
    ```
 
-3. Подать: форк microsoft/winget-pkgs → скопировать папку `manifests/b/Bilol/Jazira/0.3.0` по тому же
+3. Подать: форк microsoft/winget-pkgs → скопировать папку `manifests/b/Bilol/Jazira/0.3.1` по тому же
    пути → пулл-реквест. Робот каталога сам скачает архив, сверит сумму и проверит установку
    в чистой Windows; потом пакет смотрит модератор (обычно от нескольких дней до пары недель).
 

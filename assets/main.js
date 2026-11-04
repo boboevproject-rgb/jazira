@@ -9,8 +9,8 @@ const CONFIG = {
   // Пока пусто: на localhost формы уходят в tools/serve.py, на сайте показывают «форма не подключена».
   formUrl: "",
   // Ссылка на установщик и номер версии. Пока ссылки нет, сайт работает как лист ожидания.
-  downloadUrl: "https://github.com/boboevproject-rgb/jazira/releases/download/v0.3.0/Jazira-0.3.0-win-x64.zip",
-  version: "0.3",
+  downloadUrl: "https://github.com/boboevproject-rgb/jazira/releases/download/v0.3.1/Jazira-0.3.1-win-x64.zip",
+  version: "0.3.1",
   // Ранняя версия для пробы, пока полной нет: ссылка под формами листа ожидания (пусто — скрыта).
   earlyUrl: "https://github.com/boboevproject-rgb/jazira/releases/tag/v0.2.0",
   earlyVersion: "0.2",

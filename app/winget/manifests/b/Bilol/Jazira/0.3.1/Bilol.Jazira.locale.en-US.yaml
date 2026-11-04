@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+
+PackageIdentifier: Bilol.Jazira
+PackageVersion: 0.3.1
+PackageLocale: en-US
+Publisher: Bilol
+PublisherUrl: https://github.com/boboevproject-rgb
+PublisherSupportUrl: https://boboevproject-rgb.github.io/jazira/#feedback
+Author: Bilol
+PackageName: Jazira
+PackageUrl: https://boboevproject-rgb.github.io/jazira/
+License: MIT
+LicenseUrl: https://github.com/boboevproject-rgb/jazira/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Bilol
+CopyrightUrl: https://github.com/boboevproject-rgb/jazira/blob/main/LICENSE
+ShortDescription: A little island at the top of your Windows screen with music, lyrics, timers, water, files and tasks.
+Description: |-
+  Jazira lives at the top edge of Windows. Point at it and the island opens up: what is playing in any player with synced lyrics,
+  "My day" with tasks, several timers and your next meeting from a secret iCal link, a shelf where new downloads and screenshots
+  land on their own, a focus timer, a water tracker with a koi that grows on the days you hit your goal, and a System page with
+  CPU, memory, heat, network and battery wear. Move away and it shrinks back into a quiet strip.
+  Everything stays on your computer: no accounts, ads or tracking. Ctrl+Alt+J opens the island, Ctrl+PrtScn takes a screenshot.
+  Run "jazira" once after installing; the tray icon has settings and start with Windows.
+Moniker: jazira
+Tags:
+- dynamic-island
+- island
+- lyrics
+- music
+- pomodoro
+- productivity
+- screenshot
+- system-monitor
+- timer
+- water-reminder
+ReleaseNotes: |-
+  - Auto-hide (Position -> "Auto-hide - show on hover"): the island slides up behind the top edge and leaves a thin strip; point at the strip to bring it back.
+  - Notifications, Ctrl+Alt+J and a file dragged to the strip show the island too; while hidden, clicks go through to the windows below.
+  - Off by default.
+ReleaseNotesUrl: https://github.com/boboevproject-rgb/jazira/releases/tag/v0.3.1
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

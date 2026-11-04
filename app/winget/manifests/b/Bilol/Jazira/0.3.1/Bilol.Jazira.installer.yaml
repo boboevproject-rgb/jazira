@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
+
+PackageIdentifier: Bilol.Jazira
+PackageVersion: 0.3.1
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+- RelativeFilePath: Jazira.exe
+  PortableCommandAlias: jazira
+MinimumOSVersion: 10.0.17763.0
+ReleaseDate: 2026-11-05
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/boboevproject-rgb/jazira/releases/download/v0.3.1/Jazira-0.3.1-win-x64.zip
+  InstallerSha256: F05EDFB9C5A7D2095FAC315A5918069786B6DBC8F3B29D9DE787E7CADF1C5981
+ManifestType: installer
+ManifestVersion: 1.10.0
