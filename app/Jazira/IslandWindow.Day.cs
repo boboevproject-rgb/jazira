@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,7 +20,12 @@ public partial class IslandWindow
     static readonly int[] PresetMinutes = { 5, 10, 15, 30 };
     static readonly Geometry CheckGeo = G("M3 8.5l3.2 3.2L13 5");
     static readonly Geometry TaskGeo = G("M5 4h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 4z M7 9.2l1.6 1.6L11.8 7.6l1.2 1.2-4.4 4.4L5.8 10.4z M14 9h4v1.8h-4z M7 14.5h11v1.8H7z");
+    static readonly Geometry CalendarGeo = G("M7 2h2v2h6V2h2v2h2.5A1.5 1.5 0 0 1 21 5.5v14a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-14A1.5 1.5 0 0 1 4.5 4H7z M5 9v10h14V9z M7 11h3v3H7z");
     bool _typing;
+    readonly CalendarService _cal = new();
+    DateTime _calNext;                                  // следующее обновление календаря
+    readonly HashSet<string> _alerted = new();          // какие напоминания о встречах и Рамазане уже показаны
+    bool? _fakeRamadan;                                 // снимки: «сейчас Рамазан»
 
     // ---- Задачи --------------------------------------------------------------------------------
 
@@ -31,15 +39,20 @@ public partial class IslandWindow
         TaskHint.Text = Strings.Get("day.hint");
         TaskHint.Visibility = TaskInput.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
 
+        RefreshDayTop(now);
+
         // Сначала несделанные: с временем — по времени, без времени — в порядке добавления; сделанные — в конце
         var list = st.Tasks.Where(t => !t.Done).OrderBy(t => t.Due ?? DateTime.MaxValue)
                      .Concat(st.Tasks.Where(t => t.Done).OrderBy(t => t.DoneAt)).ToList();
         TaskList.Children.Clear();
         if (list.Count == 0 && TaskInputRow.Visibility != Visibility.Visible)
             TaskList.Children.Add(new TextBlock { Text = Strings.Get("day.empty"), FontSize = 12, Foreground = Res("Dim"), TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 4, 0, 2) });
-        foreach (var t in list.Take(TasksShown)) TaskList.Children.Add(TaskRow(t, now));
-        if (list.Count > TasksShown)
-            TaskList.Children.Add(new TextBlock { Text = Strings.Format("day.more", list.Count - TasksShown), FontSize = 11, Foreground = Res("Faint"), Margin = new Thickness(24, 2, 0, 0) });
+        // Карточка встречи или Рамазана занимает место двух задач — остров не должен вылезти за окно
+        int shown = Math.Max(2, TasksShown - 2 * DayTop.Children.Count - (TaskInputRow.Visibility == Visibility.Visible ? 1 : 0));
+        if (list.Count == shown + 1) shown++; // «и ещё 1» не короче самой задачи
+        foreach (var t in list.Take(shown)) TaskList.Children.Add(TaskRow(t, now));
+        if (list.Count > shown)
+            TaskList.Children.Add(new TextBlock { Text = Strings.Format("day.more", list.Count - shown), FontSize = 11, Foreground = Res("Faint"), Margin = new Thickness(24, 2, 0, 0) });
     }
 
     FrameworkElement TaskRow(TaskItem t, DateTime now)
@@ -149,6 +162,177 @@ public partial class IslandWindow
             Collapse();
         }
         ShowPeek(kind, bg, icon, title, sub, seconds: seconds, action: action, onAction: onAction);
+    }
+
+    // ---- Встреча из календаря и Рамазан — карточки над задачами ------------------------------
+
+    void RefreshDayTop(DateTime now)
+    {
+        DayTop.Children.Clear();
+        if (RamadanNow(now) is var (isIftar, at, day))
+            DayTop.Children.Add(DayCard(MoonGeo, Res("Violet"),
+                Strings.Format(isIftar ? "ramadan.iftar" : "ramadan.suhoor", at.ToString("H:mm", CultureInfo.InvariantCulture)),
+                Strings.Format("in", Duration(at - now)) + " · " + Strings.Format("ramadan.day", day), null, null));
+
+        if (AppState.Current.CalendarUrl == null) return;
+        if (_cal.Next(now) is CalEvent e)
+        {
+            var range = $"{e.Start:H:mm}–{e.End:H:mm}";
+            var sub = e.Start <= now ? Strings.Format("cal.now", e.End.ToString("H:mm", CultureInfo.InvariantCulture))
+                                     : $"{range} · {Strings.Format("in", Duration(e.Start - now))}";
+            DayTop.Children.Add(DayCard(CalendarGeo, Res("Sky"), e.Title, sub, e.Link != null ? Strings.Get("cal.join") : null, e.Link));
+        }
+        else
+            DayTop.Children.Add(DayCard(CalendarGeo, Res("Muted"), Strings.Get(_cal.Failed ? "cal.failed" : _cal.LoadedAt == null ? "cal.waiting" : "cal.empty"), "", null, null));
+    }
+
+    FrameworkElement DayCard(Geometry icon, Brush accent, string title, string sub, string? action, string? link)
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var badge = new Border { Width = 24, Height = 24, CornerRadius = new CornerRadius(12), Background = accent, VerticalAlignment = VerticalAlignment.Center };
+        badge.Child = new WpfPath { Data = icon, Width = 12, Height = 12, Stretch = Stretch.Uniform, Fill = Brushes.White };
+        grid.Children.Add(badge);
+        var texts = new StackPanel { Margin = new Thickness(10, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+        texts.Children.Add(new TextBlock { Text = title, FontSize = 12.5, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+        if (sub.Length > 0) texts.Children.Add(new TextBlock { Text = sub, FontSize = 11, Foreground = Res("Dim"), TextTrimming = TextTrimming.CharacterEllipsis });
+        Grid.SetColumn(texts, 1);
+        grid.Children.Add(texts);
+        if (action != null && link != null)
+        {
+            var join = new Button { Style = (Style)FindResource("MiniPill"), Content = action, Background = Res("Sky"), Foreground = Brushes.Black, Margin = new Thickness(0), VerticalAlignment = VerticalAlignment.Center };
+            join.Click += (_, _) => OpenLink(link);
+            Grid.SetColumn(join, 2);
+            grid.Children.Add(join);
+        }
+        return new Border { Child = grid, Background = Res("Chip"), CornerRadius = new CornerRadius(12), Padding = new Thickness(8, 6, 8, 6), Margin = new Thickness(0, 6, 0, 2) };
+    }
+
+    static void OpenLink(string link)
+    {
+        if (!link.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
+        try { Process.Start(new ProcessStartInfo(link) { UseShellExecute = true }); }
+        catch (Exception ex) { App.Log(ex); }
+    }
+
+    // ---- Календарь ----------------------------------------------------------------------------
+
+    void CheckCalendar(DateTime now)
+    {
+        var url = AppState.Current.CalendarUrl;
+        if (url == null || _instant) return;
+        if (now >= _calNext)
+        {
+            _calNext = now.AddMinutes(10);
+            _ = _cal.RefreshAsync(url);
+        }
+        foreach (var e in _cal.Events.Where(e => !e.AllDay && e.Start > now.AddMinutes(-2) && e.Start <= now.AddMinutes(10)))
+        {
+            var left = e.Start - now;
+            var key = $"{e.Uid}|{e.Start:O}";
+            if (left > TimeSpan.Zero && _alerted.Add(key + "|soon"))
+            {
+                Chime.Play();
+                Alert("event", Res("Sky"), CalendarGeo, e.Title, $"{Strings.Format("in", Duration(left))} · {e.Start:H:mm}", 20,
+                      e.Link != null ? Strings.Get("cal.join") : null, e.Link != null ? () => OpenLink(e.Link) : null);
+            }
+            else if (left <= TimeSpan.Zero && e.Link != null && _alerted.Add(key + "|start"))
+                Alert("event", Res("Sky"), CalendarGeo, e.Title, Strings.Get("cal.starts"), 20, Strings.Get("cal.join"), () => OpenLink(e.Link));
+        }
+    }
+
+    public string CalendarStatus() =>
+        _cal.Failed ? Strings.Get("cal.failed")
+        : _cal.LoadedAt is DateTime t ? Strings.Format("cal.connected", t.ToString("H:mm", CultureInfo.InvariantCulture))
+        : Strings.Get("cal.waiting");
+
+    // Ссылку берём из буфера обмена: так не нужно окно для ввода
+    public void ConnectCalendar()
+    {
+        string? text = null;
+        try { if (Clipboard.ContainsText()) text = Clipboard.GetText(); }
+        catch (Exception ex) { App.Log(ex); }
+        var url = CalendarService.Normalize(text);
+        if (url == null) { ShowInfo(Strings.Get("cal.nolink")); return; }
+        AppState.Current.CalendarUrl = url;
+        AppState.Save();
+        _calNext = DateTime.MinValue;
+        ShowInfo(Strings.Get("cal.ok"));
+        CheckCalendar(DateTime.Now);
+    }
+
+    public void RefreshCalendar()
+    {
+        _calNext = DateTime.MinValue;
+        CheckCalendar(DateTime.Now);
+    }
+
+    public void DisconnectCalendar()
+    {
+        AppState.Current.CalendarUrl = null;
+        AppState.Save();
+        _cal.Clear();
+    }
+
+    void OnCalendarChanged()
+    {
+        if (_mode == Mode.Expanded && PageName == "day" && !_typing) { RefreshDay(); ResizeDay(); }
+        SettingsChanged?.Invoke(); // в меню — новое «обновлён в …»
+    }
+
+    // ---- Рамазан ------------------------------------------------------------------------------
+
+    static readonly UmAlQuraCalendar Hijri = new();
+
+    bool IsRamadan(DateTime d)
+    {
+        if (_fakeRamadan is bool f) return f;
+        try { return Hijri.GetMonth(d) == 9; }
+        catch (ArgumentOutOfRangeException) { return false; }
+    }
+
+    int RamadanDay(DateTime d)
+    {
+        if (_fakeRamadan != null) return 12;
+        try { return Hijri.GetDayOfMonth(d); }
+        catch (ArgumentOutOfRangeException) { return 0; }
+    }
+
+    // До фаджра — сухур (последняя еда), днём — ифтар (разговение на закате), после заката — завтрашний сухур
+    (bool Iftar, DateTime At, int Day)? RamadanNow(DateTime now)
+    {
+        if (!AppState.Current.Ramadan) return null;
+        var city = LocalInfo.CityOf(AppState.Current.City);
+        var today = TodayPrayers();
+        DateTime fajr = today[0], maghrib = today[4];
+        if (IsRamadan(now.Date))
+        {
+            if (now < fajr) return (false, fajr, RamadanDay(now.Date));
+            if (now < maghrib) return (true, maghrib, RamadanDay(now.Date));
+        }
+        var tomorrow = now.Date.AddDays(1);
+        if (IsRamadan(tomorrow))
+            return (false, PrayerTimes.ForDate(tomorrow, city.Lat, city.Lon)[0].ToLocalTime(), RamadanDay(tomorrow));
+        return null;
+    }
+
+    void CheckRamadan(DateTime now)
+    {
+        if (RamadanNow(now) is not var (iftar, at, _)) return;
+        var left = at - now;
+        var day = at.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var time = at.ToString("H:mm", CultureInfo.InvariantCulture);
+        if (iftar && left <= TimeSpan.FromMinutes(15) && left > TimeSpan.FromMinutes(1) && _alerted.Add("iftar15|" + day))
+            Alert("ramadan", Res("Violet"), MoonGeo, Strings.Get("ramadan.iftarSoon"), Strings.Format("ramadan.iftar", time), 15);
+        else if (iftar && left <= TimeSpan.FromMinutes(1) && _alerted.Add("iftar|" + day))
+        {
+            Chime.Play();
+            Alert("ramadan", Res("Violet"), MoonGeo, Strings.Get("ramadan.iftarNow"), Strings.Format("ramadan.iftar", time), 30);
+        }
+        else if (!iftar && left <= TimeSpan.FromMinutes(30) && left > TimeSpan.Zero && _alerted.Add("suhoor30|" + day))
+            Alert("ramadan", Res("Violet"), MoonGeo, Strings.Get("ramadan.suhoorSoon"), Strings.Format("ramadan.suhoor", time), 20);
     }
 
     // ---- Ввод с клавиатуры --------------------------------------------------------------------

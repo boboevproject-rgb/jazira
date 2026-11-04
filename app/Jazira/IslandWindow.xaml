@@ -326,7 +326,7 @@
                 <TextBlock x:Name="TaskAddText" FontWeight="SemiBold"/>
               </Button>
             </Grid>
-            <Border x:Name="EventRow" Grid.Row="1" Visibility="Collapsed"/>
+            <StackPanel x:Name="DayTop" Grid.Row="1"/>
             <StackPanel x:Name="TaskList" Grid.Row="2" Margin="0,6,0,0"/>
             <Border x:Name="TaskInputRow" Grid.Row="3" Margin="0,6,0,0" Height="30" CornerRadius="10" Background="{DynamicResource Chip}" Padding="10,0" Visibility="Collapsed">
               <Grid>

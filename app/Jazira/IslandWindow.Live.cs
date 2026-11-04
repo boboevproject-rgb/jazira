@@ -38,6 +38,7 @@ public partial class IslandWindow
         _focus.Finished += OnFocusFinished;
         _lyrics.Changed += OnLyricsChanged;
         _local.Changed += RefreshLocal;
+        _cal.Changed += OnCalendarChanged;
         if (_audio != null) _audio.VolumeChanged += () => VolumePeek(_audio.Volume, _audio.Muted);
         if (_sys != null)
         {
@@ -292,6 +293,7 @@ public partial class IslandWindow
             st.City = "dushanbe"; st.WaterGoalMl = 2000;
             st.Shelf = new List<string>();
             st.DayPage = true; st.Tasks = new List<TaskItem>(); st.Timers = new List<TimerItem>();
+            st.CalendarUrl = null; st.Ramadan = true; _fakeRamadan = false; _cal.Fake(Array.Empty<CalEvent>());
             TaskInput.Clear(); TaskInputRow.Visibility = Visibility.Collapsed;
             st.LastDrink = DateTime.Now.AddMinutes(-30);
             st.WaterLog[AppState.Today] = 750; // без сохранения на диск
@@ -329,6 +331,13 @@ public partial class IslandWindow
             };
             for (int i = 0; i < extra; i++) st.Tasks.Add(new() { Text = (tg ? "Вазифа " : "Задача ") + (i + 1) });
         }
+        void Calendar(string lang, bool soon = true)
+        {
+            st.CalendarUrl = "https://example.com/fake.ics"; // только в памяти: снимки не сохраняют настройки
+            var now = DateTime.Now;
+            var start = soon ? now.AddMinutes(12) : now.AddMinutes(-20);
+            _cal.Fake(new[] { new CalEvent("s", lang == "tg" ? "Мулоқот бо даста" : "Созвон с командой", start, start.AddMinutes(45), false, "https://meet.google.com/abc-defg-hij") });
+        }
         void Timers()
         {
             var now = DateTime.Now;
@@ -352,6 +361,11 @@ public partial class IslandWindow
             yield return ($"{lang}-music-empty", () => { Base(lang); Expand("music"); });
             yield return ($"{lang}-day", () => { Base(lang); Tasks(lang); Expand("day"); });
             yield return ($"{lang}-day-empty", () => { Base(lang); Expand("day"); });
+            yield return ($"{lang}-day-calendar", () => { Base(lang); Tasks(lang); Calendar(lang); Expand("day"); });
+            yield return ($"{lang}-day-calendar-now", () => { Base(lang); Calendar(lang, soon: false); Expand("day"); });
+            yield return ($"{lang}-day-ramadan", () => { Base(lang); _fakeRamadan = true; Tasks(lang); Calendar(lang); Expand("day"); });
+            yield return ($"{lang}-peek-event", () => { Base(lang); Calendar(lang); Collapse(); Alert("event", Res("Sky"), CalendarGeo, lang == "tg" ? "Мулоқот бо даста" : "Созвон с командой", $"{Strings.Format("in", Duration(TimeSpan.FromMinutes(10)))} · 15:00", 20, Strings.Get("cal.join"), () => { }); });
+            yield return ($"{lang}-peek-iftar", () => { Base(lang); Collapse(); Alert("ramadan", Res("Violet"), MoonGeo, Strings.Get("ramadan.iftarNow"), Strings.Format("ramadan.iftar", "17:12"), 30); });
             yield return ($"{lang}-day-many", () => { Base(lang); Tasks(lang, 3); Expand("day"); });
             yield return ($"{lang}-day-typing", () => { Base(lang); Tasks(lang); TaskInputRow.Visibility = Visibility.Visible; TaskInput.Text = lang == "tg" ? "чой баъди 20 дақ" : "чай через 20 мин"; Expand("day"); });
             yield return ($"{lang}-day-typing-empty", () => { Base(lang); TaskInputRow.Visibility = Visibility.Visible; Expand("day"); });

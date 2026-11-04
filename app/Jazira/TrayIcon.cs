@@ -96,9 +96,25 @@ sealed class TrayIcon : IDisposable
         features.DropDownItems.Add(Item(Strings.Get("f.koi"), () => Set(() => st.Koi = !st.Koi), st.Koi));
         features.DropDownItems.Add(Item(Strings.Get("f.indicators"), () => Set(() => st.Indicators = !st.Indicators), st.Indicators));
         features.DropDownItems.Add(Item(Strings.Get("f.day"), () => Set(() => st.DayPage = !st.DayPage), st.DayPage));
+        features.DropDownItems.Add(Item(Strings.Get("f.ramadan"), () => Set(() => st.Ramadan = !st.Ramadan), st.Ramadan));
         features.DropDownItems.Add(Item(Strings.Get("f.local"), () => Set(() => st.LocalPage = !st.LocalPage), st.LocalPage));
         features.DropDownItems.Add(Item(Strings.Get("f.prayer"), () => Set(() => st.Prayer = !st.Prayer), st.Prayer));
         menu.Items.Add(features);
+
+        var cal = new Forms.ToolStripMenuItem(Strings.Get("cal.menu"));
+        if (st.CalendarUrl == null)
+        {
+            cal.DropDownItems.Add(Item(Strings.Get("cal.connect"), () => { _island.ConnectCalendar(); Rebuild(); }));
+            cal.DropDownItems.Add(Item(Strings.Get("cal.help"), () => Process.Start(new ProcessStartInfo(App.CalendarHelp) { UseShellExecute = true })));
+        }
+        else
+        {
+            cal.DropDownItems.Add(new Forms.ToolStripMenuItem(_island.CalendarStatus()) { Enabled = false });
+            cal.DropDownItems.Add(Item(Strings.Get("cal.refresh"), _island.RefreshCalendar));
+            cal.DropDownItems.Add(Item(Strings.Get("cal.connect"), () => { _island.ConnectCalendar(); Rebuild(); }));
+            cal.DropDownItems.Add(Item(Strings.Get("cal.disconnect"), () => Set(_island.DisconnectCalendar)));
+        }
+        menu.Items.Add(cal);
 
         var city = new Forms.ToolStripMenuItem(Strings.Get("tray.city"));
         foreach (var c in LocalInfo.Cities)

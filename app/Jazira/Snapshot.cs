@@ -70,7 +70,53 @@ static class Snapshot
         sb.AppendLine($"lyrics: {lines?.Length} lines, first {lines?[0].At} '{lines?[0].Text}', last {lines?[^1].At} '{lines?[^1].Text}'");
         KoiSelfTest(sb);
         TaskParserSelfTest(sb);
+        CalendarSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Календарь: разовые встречи в UTC и в чужом поясе, еженедельный повтор с исключением и переносом,
+    // «второй вторник месяца», ежедневный до даты, отменённая встреча, весь день, перенос длинной строки
+    static void CalendarSelfTest(System.Text.StringBuilder sb)
+    {
+        const string ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" +
+            "BEGIN:VEVENT\r\nUID:a\r\nDTSTART:20261104T100000Z\r\nDTEND:20261104T103000Z\r\nSUMMARY:Standup\r\nX-GOOGLE-CONFERENCE:https://meet.google.com/abc-defg-hij\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:b\r\nDTSTART;TZID=Europe/Moscow:20261105T150000\r\nDTEND;TZID=Europe/Moscow:20261105T160000\r\nSUMMARY:Bank\r\nDESCRIPTION:Join Zoom\\, here: https://us02web.zoom.us/j/123?pwd=x\\nThanks\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:w1\r\nDTSTART;TZID=Asia/Dushanbe:20261102T090000\r\nDTEND;TZID=Asia/Dushanbe:20261102T093000\r\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE\r\nEXDATE;TZID=Asia/Dushanbe:20261104T090000\r\nSUMMARY:Weekly\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:w1\r\nRECURRENCE-ID;TZID=Asia/Dushanbe:20261109T090000\r\nDTSTART;TZID=Asia/Dushanbe:20261109T113000\r\nDTEND;TZID=Asia/Dushanbe:20261109T120000\r\nSUMMARY:Weekly (moved)\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:m\r\nDTSTART;TZID=Asia/Dushanbe:20261013T180000\r\nDURATION:PT1H\r\nRRULE:FREQ=MONTHLY;BYDAY=2TU;COUNT=5\r\nSUMMARY:Board\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:d\r\nDTSTART:20261103T060000Z\r\nDTEND:20261103T061500Z\r\nRRULE:FREQ=DAILY;UNTIL=20261105T060000Z\r\nSUMMARY:Pills\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:x\r\nDTSTART:20261106T100000Z\r\nSTATUS:CANCELLED\r\nSUMMARY:Gone\r\nEND:VEVENT\r\n" +
+            "BEGIN:VEVENT\r\nUID:f\r\nDTSTART;VALUE=DATE:20261106\r\nDTEND;VALUE=DATE:20261107\r\nSUMMARY:Holiday with a very long na\r\n me folded\r\nEND:VEVENT\r\n" +
+            "END:VCALENDAR\r\n";
+        var ev = Ics.Parse(ics, new DateTime(2026, 11, 1), new DateTime(2026, 12, 31));
+        DateTime Utc(int d, int h, int m = 0) => new DateTime(2026, 11, d, h, m, 0, DateTimeKind.Utc).ToLocalTime();
+        DateTime Zone(string id, int mo, int d, int h, int m = 0) =>
+            TimeZoneInfo.ConvertTime(new DateTime(2026, mo, d, h, m, 0), TimeZoneInfo.FindSystemTimeZoneById(id), TimeZoneInfo.Local);
+        string Times(string title) => string.Join(",", ev.Where(e => e.Title == title).Select(e => e.Start.ToString("MM-dd HH:mm")));
+        int fails = 0;
+        void Check(string name, object? got, object? want)
+        {
+            bool ok = Equals(got, want);
+            if (!ok) fails++;
+            sb.AppendLine($"cal {(ok ? "ok  " : "FAIL")} {name}: {got} (want {want})");
+        }
+        var a = ev.FirstOrDefault(e => e.Title == "Standup");
+        Check("utc time", a?.Start, Utc(4, 10));
+        Check("meet link", a?.Link, "https://meet.google.com/abc-defg-hij");
+        var b = ev.FirstOrDefault(e => e.Title == "Bank");
+        Check("tzid time", b?.Start, Zone("Europe/Moscow", 11, 5, 15));
+        Check("zoom link", b?.Link, "https://us02web.zoom.us/j/123?pwd=x");
+        Check("weekly with exdate", string.Join(",", Times("Weekly").Split(',').Take(3)),
+              string.Join(",", new[] { Zone("Asia/Dushanbe", 11, 2, 9), Zone("Asia/Dushanbe", 11, 11, 9), Zone("Asia/Dushanbe", 11, 16, 9) }.Select(t => t.ToString("MM-dd HH:mm"))));
+        Check("moved occurrence", Times("Weekly (moved)"), Zone("Asia/Dushanbe", 11, 9, 11, 30).ToString("MM-dd HH:mm"));
+        Check("second tuesday", Times("Board"), $"{Zone("Asia/Dushanbe", 11, 10, 18):MM-dd HH:mm},{Zone("Asia/Dushanbe", 12, 8, 18):MM-dd HH:mm}");
+        Check("daily until", Times("Pills"), $"{Utc(3, 6):MM-dd HH:mm},{Utc(4, 6):MM-dd HH:mm},{Utc(5, 6):MM-dd HH:mm}");
+        Check("cancelled skipped", ev.Any(e => e.Title == "Gone"), false);
+        var f = ev.FirstOrDefault(e => e.Title.StartsWith("Holiday"));
+        Check("all-day + folded", $"{f?.AllDay} {f?.Title}", "True Holiday with a very long name folded");
+        Check("normalize webcal", CalendarService.Normalize(" webcal://calendar.google.com/calendar/ical/x/basic.ics "), "https://calendar.google.com/calendar/ical/x/basic.ics");
+        Check("reject http", CalendarService.Normalize("http://example.com/a.ics"), null);
+        sb.AppendLine($"calendar: {(fails == 0 ? "all ok" : fails + " FAILED")}");
     }
 
     // Время из текста задачи: «в 18:30», «через 20 мин», «завтра», по-английски и по-таджикски

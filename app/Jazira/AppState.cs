@@ -38,6 +38,8 @@ public sealed class AppState
     public bool AutoUpdate { get; set; } = true;
     public List<string> Shelf { get; set; } = new();
     public bool DayPage { get; set; } = true;
+    public string? CalendarUrl { get; set; }   // секретная iCal-ссылка Google или Outlook — только здесь, в журнал не пишется
+    public bool Ramadan { get; set; } = true;  // в месяц Рамазан — отсчёт до ифтара и сухура
     public List<TaskItem> Tasks { get; set; } = new();
     public List<TimerItem> Timers { get; set; } = new();
 

@@ -147,6 +147,8 @@ public partial class IslandWindow : Window
         }
         CheckTasks(now);
         CheckTimers(now);
+        CheckCalendar(now);
+        if (now.Second == 0) CheckRamadan(now);
         RefreshIdleRight();
         if (_mode == Mode.Expanded)
         {
