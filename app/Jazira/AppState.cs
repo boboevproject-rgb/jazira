@@ -38,10 +38,15 @@ public sealed class AppState
     public bool AutoUpdate { get; set; } = true;
     public List<string> Shelf { get; set; } = new();
 
+    // Рыбка-питомец: дни, когда цель по воде выполнена. По ним кои растёт, а самая длинная серия
+    // открывает окраски и вторую рыбку — насовсем, даже если потом серия прервалась (KoiPet.cs)
+    public List<string>? KoiDays { get; set; }
+
     public static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Jazira");
     static string FilePath => Path.Combine(Dir, "state.json");
     public static AppState Current { get; private set; } = new();
     public static string Today => DateTime.Now.ToString("yyyy-MM-dd");
+    public static bool ReadOnly; // снимки (--snapshot) меняют настройки только в памяти — файл не трогаем
 
     [JsonIgnore]
     public int WaterToday => WaterLog.TryGetValue(Today, out var v) ? v : 0;
@@ -53,6 +58,7 @@ public sealed class AppState
         // Храним два месяца — дальше история не нужна
         var cutoff = DateTime.Now.AddDays(-60).ToString("yyyy-MM-dd");
         foreach (var day in WaterLog.Keys.Where(k => string.CompareOrdinal(k, cutoff) < 0).ToList()) WaterLog.Remove(day);
+        KoiPet.Sync(this);
         Save();
     }
 
@@ -63,10 +69,12 @@ public sealed class AppState
             if (File.Exists(FilePath)) Current = JsonSerializer.Deserialize<AppState>(File.ReadAllText(FilePath)) ?? new();
         }
         catch (Exception) { Current = new(); } // испорченный файл — начинаем с чистого листа
+        KoiPet.Migrate(Current);
     }
 
     public static void Save()
     {
+        if (ReadOnly) return;
         try
         {
             Directory.CreateDirectory(Dir);

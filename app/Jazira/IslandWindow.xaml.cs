@@ -51,6 +51,8 @@ public partial class IslandWindow : Window
     static readonly Geometry CapsGeo = G("M12 3l8 8.5h-4.6V16H8.6v-4.5H4z M8 18h8v2.2H8z");
     static readonly Geometry CameraGeo = G("M3.5 6.5h11a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 2 16V8a1.5 1.5 0 0 1 1.5-1.5z M17 10.2l5-3v9.6l-5-3z");
     static readonly Geometry MicGeo = G("M12 2.5a3.2 3.2 0 0 1 3.2 3.2v5.6a3.2 3.2 0 0 1-6.4 0V5.7A3.2 3.2 0 0 1 12 2.5z M5.5 11h1.8a4.7 4.7 0 0 0 9.4 0h1.8a6.5 6.5 0 0 1-5.6 6.4V21h-1.8v-3.6A6.5 6.5 0 0 1 5.5 11z");
+    static readonly Geometry FishGeo = G("M2.5 12C5.4 7.6 10.4 6.1 14.4 8.1L20.5 4.6v14.8l-6.1-3.5C10.4 17.9 5.4 16.4 2.5 12z M6.6 10.9a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z");
+    static readonly Geometry ShareGeo = G("M12 2.5l5 5-1.5 1.5-2.4-2.4V15h-2.2V6.6L8.5 9 7 7.5z M4.5 12.5h2.2v6.3h10.6v-6.3h2.2V21h-15z");
     static readonly Geometry UpdateGeo = G("M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4 3.3 3.3z M4 18.5h16v2H4z");
 
     readonly MediaService _media;
@@ -88,7 +90,7 @@ public partial class IslandWindow : Window
         _page = Math.Max(0, Array.IndexOf(Pages, AppState.Current.PageName ?? ""));
 
         PrevIcon.Data = PrevGeo; NextIcon.Data = NextGeo; CoverNote.Data = NoteGeo;
-        IdleBolt.Data = BoltGeo; WaterDrop.Data = DropGeo; ResetIcon.Data = ResetGeo;
+        IdleBolt.Data = BoltGeo; WaterDrop.Data = DropGeo; ResetIcon.Data = ResetGeo; KoiShareIcon.Data = ShareGeo;
         NavLeftIcon.Data = LeftGeo; NavRightIcon.Data = RightGeo;
         ProgTrack.SizeChanged += (_, _) => RefreshMusicProgress();
         WaterTrack.SizeChanged += (_, _) => RefreshWater();
@@ -215,7 +217,7 @@ public partial class IslandWindow : Window
     {
         "music" => !HasTrack ? new Size(420, 96) : LyricBlock.Visibility == Visibility.Visible ? new Size(420, 194) : new Size(420, 150),
         "shelf" => new Size(420, 122),
-        "water" => new Size(440, 112),
+        "water" => new Size(440, 118),
         "local" => new Size(AppState.Current.Prayer ? 460 : 400, 112),
         _ => new Size(420, 112),
     };
@@ -484,6 +486,7 @@ public partial class IslandWindow : Window
     void RefreshWater()
     {
         var st = AppState.Current;
+        if (KoiPet.Sync(st)) AppState.Save(); // новый день или новая цель — сегодняшний день засчитан заново
         int now = st.WaterToday, goal = st.WaterGoalMl;
         var ml = Strings.Get("ml");
         WaterNow.Text = now.ToString("#,0", Strings.Culture);
@@ -494,12 +497,37 @@ public partial class IslandWindow : Window
         WaterUndoText.Text = Strings.Get("water.undo");
 
         WaterKoi.Visibility = st.Koi ? Visibility.Visible : Visibility.Collapsed;
+        KoiShare.Visibility = WaterKoi.Visibility;
+        KoiShare.ToolTip = Strings.Get("koi.share");
         WaterDrop.Visibility = st.Koi ? Visibility.Collapsed : Visibility.Visible;
         var (level, energy, thirsty) = KoiMood();
-        foreach (var koi in new[] { WaterKoi, IdleKoi }) { koi.Level = level; koi.Energy = energy; }
-        WaterNote.Text = st.Koi && thirsty && f < 1
-            ? Strings.Get("water.thirsty")
-            : $"{Strings.Get("water.today")} · {(int)Math.Round(f * 100)}%" + (f >= 1 ? " · " + Strings.Get("water.goal") : "");
+        bool sad = KoiPet.Sad(st);
+        var kind = KoiPet.Kind(st);
+        double growth = KoiPet.Growth(st);
+        KoiKind? second = KoiPet.HasSecond(st) ? KoiPet.SecondKind(st) : null;
+        foreach (var koi in new[] { WaterKoi, IdleKoi })
+        {
+            koi.Level = level;
+            koi.Energy = energy;
+            koi.Sad = sad;
+            koi.SetFish(kind, growth, second, growth * 0.6);
+        }
+        WaterNote.Text = st.Koi && sad && f < 1 ? Strings.Get("koi.sad")
+            : st.Koi && thirsty && f < 1 ? Strings.Get("water.thirsty")
+            : f >= 1 ? $"{Strings.Get("water.today")} · {Strings.Get("water.goal")}"
+            : $"{Strings.Get("water.today")} · {(int)Math.Round(f * 100)}%";
+
+        // Под водой — сама рыбка: сколько ей дней и какая серия; в день открытия — новость
+        KoiLine.Visibility = st.Koi ? Visibility.Visible : Visibility.Collapsed;
+        var news = KoiPet.NewsToday(st);
+        int age = KoiPet.Age(st);
+        KoiLine.Text = news != null ? Strings.Get("koi.new." + news)
+            : age == 0 ? Strings.Get("koi.fry")
+            : KoiLineText(st);
+        KoiLine.Foreground = news != null ? Res("Amber") : Res("Faint");
+        WaterKoi.ToolTip = KoiPet.Next(st) is { } next
+            ? Strings.Format("koi.next", Strings.Days(Math.Max(1, next.At - KoiPet.Streak(st))), Strings.Get("chip." + next.What))
+            : null;
     }
 
     // Настроение рыбки: чем дольше вы не пили, тем мельче пруд и тем она вялее
@@ -513,9 +541,49 @@ public partial class IslandWindow : Window
 
     void AddWater(int ml)
     {
-        AppState.Current.AddWater(ml);
+        var st = AppState.Current;
+        bool before = st.WaterToday >= st.WaterGoalMl;
+        st.AddWater(ml);
         if (ml > 0) { WaterKoi.Splash(); IdleKoi.Splash(); }
         RefreshWater();
+        if (before || st.WaterToday < st.WaterGoalMl || !st.Koi) return;
+
+        // Цель выполнена только что: рыбка подросла, а может, открылось что-то новое
+        var news = KoiPet.NewsToday(st);
+        if (news != null) Chime.Play();
+        ShowPeek("koi", Res(news != null ? "Amber" : "Sky"), FishGeo,
+                 Strings.Get(news != null ? "koi.new." + news : "koi.goal"),
+                 KoiLineText(st), seconds: 5);
+    }
+
+    // «Кои: 14 дн. · серия 5»; серии нет — только возраст
+    static string KoiLineText(AppState st)
+    {
+        int streak = KoiPet.Streak(st);
+        return streak > 0 ? Strings.Format("koi.line", Strings.DaysShort(KoiPet.Age(st)), streak)
+                          : Strings.Format("koi.age", Strings.DaysShort(KoiPet.Age(st)));
+    }
+
+    // Картинка «Моя кои» для сторис: в «Изображения\Jazira», в буфер обмена и на полку
+    public void ShareKoi()
+    {
+        try
+        {
+            var image = KoiCard.Render(AppState.Current);
+            var path = KoiCard.Save(image);
+            try { Clipboard.SetImage(image); }
+            catch (Exception ex) { App.Log(ex); } // буфер занят другой программой — картинка всё равно на полке
+            AddToShelf(new[] { path });
+            if (_mode == Mode.Expanded) Collapse();
+            ShowPeek("koi", Res("Coral"), FishGeo, Strings.Get("koi.saved"), System.IO.Path.GetFileName(path), seconds: 8,
+                     action: Strings.Get("koi.open"),
+                     onAction: () => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }));
+        }
+        catch (Exception ex)
+        {
+            App.Log(ex);
+            ShowInfo(Strings.Get("koi.fail"));
+        }
     }
 
     // ---- Кнопки -------------------------------------------------------------------------------
@@ -530,6 +598,7 @@ public partial class IslandWindow : Window
     void FocusReset_Click(object sender, RoutedEventArgs e) { _focus.Reset(); RefreshFocus(); RefreshIdleRight(); }
     void Water250_Click(object sender, RoutedEventArgs e) => AddWater(250);
     void WaterUndo_Click(object sender, RoutedEventArgs e) => AddWater(-250);
+    void KoiShare_Click(object sender, RoutedEventArgs e) => ShareKoi();
 
     void PeekAction_Click(object sender, RoutedEventArgs e)
     {

@@ -28,6 +28,32 @@ static class Strings
         ["water.thirsty"] = new[] { "Рыбка хочет пить", "Your koi is thirsty", "Моҳӣ об мехоҳад" },
         ["water.koiRemind"] = new[] { "Рыбке не хватает воды", "Your koi needs water", "Ба моҳӣ об намерасад" },
         ["water.undo"] = new[] { "Отменить", "Undo", "Бекор" },
+
+        ["koi.line"] = new[] { "Кои: {0} · серия {1}", "Koi: {0} · streak {1}", "Кои: {0} · силсила {1}" },
+        ["koi.age"] = new[] { "Кои: {0}", "Koi: {0}", "Кои: {0}" },
+        ["koi.fry"] = new[] { "Малёк растёт с каждой целью", "A fry, grows with every goal", "Моҳича бо ҳар ҳадаф калон мешавад" },
+        ["koi.sad"] = new[] { "Кои скучала — начнём заново", "Koi missed you — fresh start", "Кои дилтанг шуд — аз нав" },
+        ["koi.next"] = new[] { "До «{1}» — ещё {0} подряд", "{0} more in a row for “{1}”", "То «{1}» — боз {0} пай дар пай" },
+        ["koi.new.sanke"] = new[] { "Новая окраска — санкэ!", "New colors — sanke!", "Ранги нав — санке!" },
+        ["koi.new.second"] = new[] { "В пруду вторая рыбка!", "A second koi joined!", "Моҳии дуюм пайдо шуд!" },
+        ["koi.new.ogon"] = new[] { "Золотая кои — огон!", "Golden koi — ogon!", "Кои тиллоӣ — огон!" },
+        ["koi.goal"] = new[] { "Цель выполнена — кои подросла", "Goal reached — your koi grew", "Ҳадаф иҷро шуд — кои калон шуд" },
+        ["koi.share"] = new[] { "Картинка «Моя кои» для сторис", "“My koi” picture for stories", "Расми «Кои ман» барои сторис" },
+        ["koi.saved"] = new[] { "Картинка готова: в буфере и на полке", "Picture ready: copied and on the shelf", "Расм тайёр: дар буфер ва дар раф" },
+        ["koi.open"] = new[] { "Открыть", "Open", "Кушодан" },
+        ["koi.fail"] = new[] { "Не удалось сохранить картинку", "Couldn't save the picture", "Расмро нигоҳ дошта нашуд" },
+        ["kind.kohaku"] = new[] { "белая с красным кохаку", "white-and-red kohaku", "кохакуи сафеду сурх" },
+        ["kind.sanke"] = new[] { "трёхцветная санкэ", "tricolor sanke", "санкеи серанга" },
+        ["kind.ogon"] = new[] { "золотая огон", "golden ogon", "огони тиллоӣ" },
+        ["chip.kohaku"] = new[] { "кохаку", "kohaku", "кохаку" },
+        ["chip.sanke"] = new[] { "санкэ", "sanke", "санке" },
+        ["chip.second"] = new[] { "вторая рыбка", "second koi", "моҳии дуюм" },
+        ["chip.ogon"] = new[] { "огон", "ogon", "огон" },
+        ["card.title"] = new[] { "Моя кои — {0}", "My koi — {0}", "Кои ман — {0}" },
+        ["card.first"] = new[] { "Моя кои — первый день", "My koi — day one", "Кои ман — рӯзи аввал" },
+        ["card.streak"] = new[] { "{0} подряд", "{0} in a row", "{0} пай дар пай" },
+        ["card.grow"] = new[] { "Растёт с каждым днём, когда я пью норму воды", "It grows every day I drink enough water", "Ҳар рӯзе, ки меъёри обро менӯшам, калон мешавад" },
+        ["card.app"] = new[] { "Jazira — остров для Windows", "Jazira — an island for Windows", "Jazira — ҷазира барои Windows" },
         ["ml"] = new[] { "мл", "ml", "мл" },
         ["l"] = new[] { "л", "L", "л" },
         ["charge.on"] = new[] { "Зарядка подключена", "Charger connected", "Барқгир пайваст шуд" },
@@ -119,6 +145,22 @@ static class Strings
     }
 
     public static string Format(string key, params object[] args) => string.Format(Culture, Get(key), args);
+
+    // «1 день», «3 дня», «5 дней»; «1 day», «2 days»; «5 рӯз»
+    public static string Days(int n) => Lang switch
+    {
+        "en" => n == 1 ? "1 day" : $"{n} days",
+        "tg" => $"{n} рӯз",
+        _ => $"{n} " + (n % 10 == 1 && n % 100 != 11 ? "день" : n % 10 is >= 2 and <= 4 && (n % 100 < 12 || n % 100 > 14) ? "дня" : "дней"),
+    };
+
+    // Коротко, для тесной строки в острове: «14 дн.», «14 d», «14 рӯз»
+    public static string DaysShort(int n) => Lang switch
+    {
+        "en" => $"{n} d",
+        "tg" => $"{n} рӯз",
+        _ => $"{n} дн.",
+    };
 
     // Числа: «1 250» по-русски и по-таджикски, «1,250» по-английски
     public static CultureInfo Culture => CultureInfo.GetCultureInfo(Lang == "en" ? "en-US" : "ru-RU");

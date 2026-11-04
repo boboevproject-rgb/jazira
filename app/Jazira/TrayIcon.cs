@@ -107,6 +107,11 @@ sealed class TrayIcon : IDisposable
         var water = new Forms.ToolStripMenuItem(Strings.Get("tray.water"));
         foreach (var ml in new[] { 1500, 2000, 2500, 3000 })
             water.DropDownItems.Add(Item(Liters(ml), () => Set(() => st.WaterGoalMl = ml), st.WaterGoalMl == ml));
+        if (st.Koi)
+        {
+            water.DropDownItems.Add(new Forms.ToolStripSeparator());
+            water.DropDownItems.Add(Item(Strings.Get("koi.share"), _island.ShareKoi));
+        }
         menu.Items.Add(water);
 
         var lang = new Forms.ToolStripMenuItem(Strings.Get("tray.lang"));

@@ -283,6 +283,11 @@
             <Grid VerticalAlignment="Center">
               <Path x:Name="WaterDrop" Width="32" Height="40" Stretch="Uniform" Fill="{StaticResource Sky}" Margin="6,0,0,0"/>
               <local:KoiPond x:Name="WaterKoi" Width="86" Height="72" Visibility="Collapsed"/>
+              <!-- Картинка «Моя кои» для сторис -->
+              <Button x:Name="KoiShare" Style="{StaticResource IconBtn}" Width="22" Height="22" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                      Margin="0,0,3,3" Background="#66000000" Click="KoiShare_Click" Visibility="Collapsed">
+                <Path x:Name="KoiShareIcon" Width="10" Height="11" Stretch="Uniform" Fill="#F2FFFFFF"/>
+              </Button>
             </Grid>
             <StackPanel Grid.Column="1" Margin="16,0,14,0" VerticalAlignment="Center">
               <TextBlock>
@@ -293,6 +298,7 @@
                 <Border x:Name="WaterFill" CornerRadius="3" Background="{StaticResource WaterGradient}" HorizontalAlignment="Left" Width="0"/>
               </Grid>
               <TextBlock x:Name="WaterNote" FontSize="11.5" Foreground="{DynamicResource Dim}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+              <TextBlock x:Name="KoiLine" FontSize="11" Foreground="{DynamicResource Faint}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
             <StackPanel Grid.Column="2" VerticalAlignment="Center">
               <Button Style="{StaticResource PillBtn}" Background="#1F7FD8" Foreground="#FFFFFF" MinWidth="96" Click="Water250_Click">

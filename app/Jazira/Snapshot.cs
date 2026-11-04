@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -13,6 +14,7 @@ static class Snapshot
     public static void Render(string dir)
     {
         Directory.CreateDirectory(dir);
+        AppState.ReadOnly = true; // состояния ниже подменяют настройки в памяти — файл пользователя не трогаем
         KoiPond.Still = true;
         WriteSelfTest(Path.Combine(dir, "selftest.txt"));
         var w = new IslandWindow(snapshot: true) { Left = -4000, Top = -4000 };
@@ -24,6 +26,14 @@ static class Snapshot
             w.RefreshAll();
             w.UpdateLayout();
             Save(w, Path.Combine(dir, name + ".png"));
+        }
+        foreach (var (name, setup) in w.KoiCardStates())
+        {
+            setup();
+            var enc = new PngBitmapEncoder();
+            enc.Frames.Add(BitmapFrame.Create(KoiCard.Render(AppState.Current)));
+            using var f = File.Create(Path.Combine(dir, name + ".png"));
+            enc.Save(f);
         }
         w.Close();
     }
@@ -58,7 +68,70 @@ static class Snapshot
         }
         var lines = LyricsService.Parse("[00:35.66]Look at the stars\n[00:38.46]Look how they shine\n[01:02.5][01:40.00]Twice\n[00:40.36]");
         sb.AppendLine($"lyrics: {lines?.Length} lines, first {lines?[0].At} '{lines?[0].Text}', last {lines?[^1].At} '{lines?[^1].Text}'");
+        KoiSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Питомец: серия, грусть, открытия и учёт сегодняшнего дня — на выдуманных историях
+    static void KoiSelfTest(System.Text.StringBuilder sb)
+    {
+        static string D(int ago) => DateTime.Today.AddDays(-ago).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        static AppState S(int todayMl, params int[] agos)
+        {
+            var st = new AppState { KoiDays = new() };
+            foreach (var a in agos) st.KoiDays.Add(D(a));
+            st.WaterLog[AppState.Today] = todayMl;
+            return st;
+        }
+        int fails = 0;
+        void Check(string name, object got, object want)
+        {
+            bool ok = Equals(got, want);
+            if (!ok) fails++;
+            sb.AppendLine($"koi {(ok ? "ok  " : "FAIL")} {name}: {got} (want {want})");
+        }
+
+        var a = S(500, 1, 2, 3);
+        Check("streak through yesterday", KoiPet.Streak(a), 3);
+        Check("kind at 3", KoiPet.Kind(a), KoiKind.Sanke);
+        Check("not sad after yesterday", KoiPet.Sad(a), false);
+        Check("no news when today not done", KoiPet.NewsToday(a), null);
+
+        var b = S(2000, 0, 1, 2, 10, 11);
+        Check("streak with today", KoiPet.Streak(b), 3);
+        Check("sanke unlocked today", KoiPet.NewsToday(b), "sanke");
+        Check("age counts all goal days", KoiPet.Age(b), 5);
+
+        var c = S(250, 3, 4);
+        Check("sad after a missed day", KoiPet.Sad(c), true);
+        Check("streak broken", KoiPet.Streak(c), 0);
+        Check("colors stay after a break", KoiPet.Kind(S(0, 5, 6, 7, 8)), KoiKind.Sanke);
+
+        var e = S(2000, Run(0, 14));
+        Check("ogon at 14", KoiPet.NewsToday(e), "ogon");
+        Check("second koi at 7+", KoiPet.HasSecond(e), true);
+        Check("best 14", KoiPet.Best(e), 14);
+        Check("second koi from 7", KoiPet.NewsToday(S(2000, Run(0, 7))), "second");
+        Check("new user not sad", KoiPet.Sad(S(0)), false);
+
+        var f = S(2000);
+        Check("sync adds today", KoiPet.Sync(f) && f.KoiDays!.Contains(AppState.Today), true);
+        f.WaterLog[AppState.Today] = 1750;
+        Check("undo below goal removes today", KoiPet.Sync(f) && !f.KoiDays!.Contains(AppState.Today), true);
+
+        var m = new AppState { WaterGoalMl = 2000 };
+        m.WaterLog[D(1)] = 2250; m.WaterLog[D(2)] = 1500; m.WaterLog[D(3)] = 2000;
+        KoiPet.Migrate(m);
+        Check("migrate from water log", string.Join(",", m.KoiDays!), $"{D(3)},{D(1)}");
+
+        var lang = Strings.Lang;
+        Strings.Lang = "ru";
+        Check("ru plural", string.Join("|", new[] { 1, 2, 5, 11, 12, 21, 22, 25, 112 }.Select(Strings.Days)),
+              "1 день|2 дня|5 дней|11 дней|12 дней|21 день|22 дня|25 дней|112 дней");
+        Strings.Lang = lang;
+        sb.AppendLine($"koi: {(fails == 0 ? "all ok" : fails + " FAILED")}");
+
+        static int[] Run(int from, int count) => System.Linq.Enumerable.Range(from, count).ToArray();
     }
 
     // Обложка-заглушка: градиент «море и закат»

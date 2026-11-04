@@ -289,10 +289,11 @@ public partial class IslandWindow
             Strings.Lang = lang;
             st.Theme = "night"; st.Shape = "pill"; st.Docked = true; st.CoverTint = true;
             st.Koi = true; st.Lyrics = true; st.Indicators = true; st.LocalPage = true; st.Prayer = false;
-            st.City = "dushanbe";
+            st.City = "dushanbe"; st.WaterGoalMl = 2000;
             st.Shelf = new List<string>();
             st.LastDrink = DateTime.Now.AddMinutes(-30);
             st.WaterLog[AppState.Today] = 750; // без сохранения на диск
+            FakePet(9, 4, false, 2);
             _fakeCam = _fakeMic = null;
             _dropHover = false;
             _lyrics.Fake(null);
@@ -311,6 +312,7 @@ public partial class IslandWindow
         }
         void Lyrics() { _lyrics.Fake(lines); _lyricIndex = 1; }
         void Water(int ml, double hoursAgo) { st.WaterLog[AppState.Today] = ml; st.LastDrink = DateTime.Now.AddHours(-hoursAgo); }
+        void Pet(int age, int streak, bool today, int gap = 2) => FakePet(age, streak, today, gap);
 
         foreach (var lang in new[] { "ru", "tg" })
         {
@@ -328,6 +330,17 @@ public partial class IslandWindow
             yield return ($"{lang}-focus", () => { Base(lang); _focus.Preview(TimeSpan.FromSeconds(24 * 60 + 12), true); Expand("focus"); });
             yield return ($"{lang}-water", () => { Base(lang); Water(1250, 0.3); Expand("water"); });
             yield return ($"{lang}-water-thirsty", () => { Base(lang); Water(500, 3.5); Expand("water"); });
+            yield return ($"{lang}-water-fry", () => { Base(lang); Pet(0, 0, false); Water(1250, 0.3); Expand("water"); });
+            yield return ($"{lang}-water-sad", () => { Base(lang); Pet(6, 0, false, 3); Water(250, 5); Expand("water"); });
+            yield return ($"{lang}-water-sanke-new", () => { Base(lang); Pet(5, 3, true); Water(2000, 0.1); Expand("water"); });
+            yield return ($"{lang}-water-two", () => { Base(lang); Pet(12, 8, false); Water(1500, 0.3); Expand("water"); });
+            yield return ($"{lang}-water-gold", () => { Base(lang); Pet(30, 16, true); Water(2250, 0.2); Expand("water"); });
+            yield return ($"{lang}-idle-two", () => { Base(lang); Pet(12, 8, false); Collapse(); });
+            yield return ($"{lang}-idle-gold", () => { Base(lang); Pet(30, 16, true); Water(2250, 0.2); Collapse(); });
+            yield return ($"{lang}-peek-koi-new", () => { Base(lang); Pet(5, 3, true); Water(2000, 0.1); Collapse();
+                ShowPeek("koi", Res("Amber"), FishGeo, Strings.Get("koi.new.sanke"), KoiLineText(st), seconds: 5); });
+            yield return ($"{lang}-peek-koi-saved", () => { Base(lang); Collapse();
+                ShowPeek("koi", Res("Coral"), FishGeo, Strings.Get("koi.saved"), "koi-2026-11-04.png", seconds: 8, action: Strings.Get("koi.open"), onAction: () => { }); });
             yield return ($"{lang}-local", () => { Base(lang); st.Prayer = true; _local.Fake(16.4, 1, 9.2122m, 0.11372m); Expand("local"); });
             yield return ($"{lang}-peek-charge", () => { Base(lang); Collapse(); _power.Fake(true, true, 78); OnPlugChanged(true); });
             yield return ($"{lang}-peek-track", () => { Base(lang); Collapse(); Track(true); ShowTrackPeek(); });
@@ -349,6 +362,39 @@ public partial class IslandWindow
         yield return ("ru-notch-idle", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Collapse(); });
         yield return ("ru-notch-music", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Track(true); Lyrics(); Expand("music"); });
         yield return ("ru-notch-peek", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Collapse(); VolumePeek(0.4f, false); });
+    }
+
+    // Снимки: подставить историю питомца — age дней с целью, из них последние streak подряд
+    // (по сегодня, если today, иначе по вчера); остальные — раньше, через gap дней пропуска
+    void FakePet(int age, int streak, bool today, int gap)
+    {
+        var days = new List<string>();
+        var d = today ? DateTime.Today : DateTime.Today.AddDays(-1);
+        if (streak == 0) d = DateTime.Today.AddDays(-gap);
+        for (int i = 0; i < age; i++)
+        {
+            if (i == streak && streak > 0) d = d.AddDays(-gap);
+            days.Add(d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            d = d.AddDays(-1);
+        }
+        AppState.Current.KoiDays = days;
+    }
+
+    // Картинки для сторис: малёк, санкэ в серии, золотая с подругой
+    internal IEnumerable<(string Name, Action Setup)> KoiCardStates()
+    {
+        var st = AppState.Current;
+        void Set(string lang, int age, int streak, int ml)
+        {
+            Strings.Lang = lang;
+            FakePet(age, streak, ml >= st.WaterGoalMl, 2);
+            st.WaterLog[AppState.Today] = ml;
+        }
+        yield return ("card-ru-fry", () => Set("ru", 0, 0, 500));
+        yield return ("card-ru-sanke", () => Set("ru", 5, 4, 2000));
+        yield return ("card-ru-gold", () => Set("ru", 22, 14, 2000));
+        yield return ("card-en-two", () => Set("en", 11, 9, 2000));
+        yield return ("card-tg-gold", () => Set("tg", 31, 16, 2000));
     }
 
     void OnFocusFinishedPreview() =>
