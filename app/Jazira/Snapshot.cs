@@ -154,7 +154,32 @@ static class Snapshot
         CaptureSelfTest(sb);
         SysSelfTest(sb);
         WingetSelfTest(sb);
+        AutoHideSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Автоскрытие: где курсор «зовёт» спрятанный остров (пиксели экрана)
+    static void AutoHideSelfTest(System.Text.StringBuilder sb)
+    {
+        // Прикреплён, экран 200 %: окно 1040×520 у верхнего края, остров 196×34 точки
+        var docked = IslandWindow.HotZone(new Native.RECT { Left = 1000, Top = 0, Right = 2040, Bottom = 520 }, 2, 6, 196, 34, true);
+        // Свободно, экран 100 %: окно на высоте 500
+        var floating = IslandWindow.HotZone(new Native.RECT { Left = 1000, Top = 500, Right = 2040, Bottom = 1020 }, 1, 6, 196, 34, false);
+        var cases = new (string Name, Rect Zone, int X, int Y, bool Want)[]
+        {
+            ("docked: cursor thrown to the top edge above the island", docked, 1520, 0, true),
+            ("docked: right end of the strip", docked, 1740, 20, true),
+            ("docked: 30 px below the edge", docked, 1520, 30, false),
+            ("docked: top edge, far to the side", docked, 1250, 0, false),
+            ("floating: over the island", floating, 1520, 520, true),
+            ("floating: under the island", floating, 1520, 600, false),
+            ("floating: top edge of the screen", floating, 1520, 0, false),
+        };
+        foreach (var (name, zone, x, y, want) in cases)
+        {
+            bool got = zone.Contains(x, y);
+            sb.AppendLine($"autohide {(got == want ? "ok  " : "FAIL")} {name}: {got}");
+        }
     }
 
     // Установка через winget: тогда сами не обновляемся (обновляет winget)

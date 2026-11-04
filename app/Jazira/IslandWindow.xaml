@@ -150,6 +150,12 @@
   <!-- Окно прозрачное: сквозь пустые места клики проходят к окнам под ним -->
   <Grid x:Name="Root">
     <Grid x:Name="ScaleHost">
+      <!-- Автоскрытие (IslandWindow.Hide.cs): тень и остров уезжают за верхний край вместе,
+           а на месте острова остаётся тонкая полоска Handle -->
+      <Grid x:Name="SlideHost">
+      <Grid.RenderTransform>
+        <TranslateTransform x:Name="SlideShift"/>
+      </Grid.RenderTransform>
       <!-- Тень — отдельным слоем под островом и без эффекта размытия (см. SoftShadow.cs).
            Внутренность слоя вырезана (Clip), поэтому сквозь полупрозрачный остров его не видно. -->
       <Grid x:Name="ShadeHost" IsHitTestVisible="False">
@@ -468,6 +474,12 @@
           </Grid>
         </Grid>
       </Border>
+      </Grid>
+      <!-- Спрятанный остров: полоска у края; курсор над ней — остров выезжает. Щелчки она не ловит:
+           пока остров спрятан, окно целиком пропускает мышь к окнам под ним -->
+      <Border x:Name="Handle" HorizontalAlignment="Center" VerticalAlignment="Top" Width="64" Height="6"
+              Margin="0,3,0,0" CornerRadius="3" Background="{DynamicResource IslandBg}"
+              BorderBrush="{DynamicResource IslandBorder}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
     </Grid>
   </Grid>
 </Window>

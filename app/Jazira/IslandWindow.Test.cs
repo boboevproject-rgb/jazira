@@ -77,6 +77,8 @@ public partial class IslandWindow
         await Task.WhenAny(heat.Task, Task.Delay(10000));
         Log($"heat: known={_sysmon.HeatKnown}, temp={(_sysmon.TempC is double t ? $"{t:0.0}" : "hidden (sensor looks static)")}, throttling={_sysmon.Throttling}, query {sw.ElapsedMilliseconds} ms");
 
+        await AutoHideLiveTest(Log);
+
         Log($"idle for {idleSeconds} s, pid {Environment.ProcessId}");
         await Task.Delay(idleSeconds * 1000 / 2);
         Expand("water"); // самая тяжёлая для отрисовки страница — большой пруд с рыбкой
@@ -90,6 +92,36 @@ public partial class IslandWindow
             $"managed heap {gc.HeapSizeBytes >> 20} MB (committed {gc.TotalCommittedBytes >> 20} MB), " +
             $"modules {self.Modules.Count}, threads {self.Threads.Count}");
         Log("done");
+    }
+
+    // Автоскрытие на настоящем окне. Курсор до окна за краем экрана не дотянется, поэтому остров должен
+    // спрятаться сам; уведомление и раскрытие — показать его; выключили автоскрытие — вернуться насовсем.
+    async Task AutoHideLiveTest(Action<string> log)
+    {
+        var st = AppState.Current; // только в памяти: в режиме проверки настройки не сохраняются
+        string State() => $"tucked={_tucked}, mode={_mode}, click-through={ClickThrough}, poll={_hidePoll.IsEnabled}, " +
+                          $"slide y={SlideShift.Y:0}, opacity={SlideHost.Opacity:0.00}, handle={Handle.Opacity:0.00}";
+        st.AutoHide = true;
+        ApplyAutoHide(); // как из меню: подсказка «Остров будет прятаться» на 4 с
+        await Task.Delay(400);
+        log($"autohide on (hint): {State()}");
+        await Task.Delay(4000 + 1200 + 700);
+        log($"autohide after the hint: {State()}");
+        ShowInfo("autohide test");
+        await Task.Delay(500);
+        log($"autohide notification: {State()}");
+        await Task.Delay(3500 + 1200 + 700);
+        log($"autohide after the notification: {State()}");
+        Expand("music");
+        await Task.Delay(500);
+        log($"autohide expanded: {State()}");
+        Collapse();
+        await Task.Delay(1200 + 700);
+        log($"autohide collapsed again: {State()}");
+        st.AutoHide = false;
+        ApplyAutoHide();
+        await Task.Delay(500);
+        log($"autohide off: {State()}");
     }
 
     static System.Drawing.Bitmap Grab(int x, int y, int w, int h)

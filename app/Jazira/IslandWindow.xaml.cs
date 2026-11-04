@@ -122,6 +122,7 @@ public partial class IslandWindow : Window
         _tick.Tick += (_, _) => OnTick();
         _fast.Tick += (_, _) => OnFast();
         WireLive();
+        WireAutoHide();
         _tick.Start();
         _ = _media.StartAsync();
         ApplyFeatures();
@@ -206,6 +207,7 @@ public partial class IslandWindow : Window
     // Наведение открывает музыку, если она играет, иначе — последнюю страницу
     void Expand(string? page = null)
     {
+        Reveal(); // остров был спрятан (автоскрытие) — сначала выезжает
         _peekEnd.Stop();
         var pages = Pages;
         if (page != null) _page = Math.Max(0, Array.IndexOf(pages, page));
@@ -315,6 +317,7 @@ public partial class IslandWindow : Window
                   double iconRadius = 14, double? bar = null)
     {
         if (_mode == Mode.Expanded || _pressed || _dragOut) return; // открытый остров и так всё показывает
+        Reveal(); // спрятанный остров уведомление показывает всё равно
         bool same = _mode == Mode.Peek && _peekKind == kind;
         _mode = Mode.Peek;
         _peekKind = kind;

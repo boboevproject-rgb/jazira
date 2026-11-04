@@ -175,6 +175,7 @@ public partial class IslandWindow
         Island.Margin = new Thickness(0, Notch ? 0 : 6, 0, 0);
         Island.BorderThickness = Notch ? new Thickness(1, 0, 1, 1) : new Thickness(1);
         UpdateCorners(new Size(Island.ActualWidth, Island.ActualHeight));
+        ApplyHandleShape();
     }
 
     // Скругление — по высоте острова; содержимое обрезается по той же форме
@@ -282,6 +283,7 @@ public partial class IslandWindow
     public void ApplySettings()
     {
         var name = PageName;
+        Reveal(); // поменяли что-то в меню — остров показывает результат (и снова спрячется, если так настроено)
         ApplyLook();
         ApplyScale();
         Place();
@@ -291,6 +293,7 @@ public partial class IslandWindow
         RefreshAll();
         if (_mode == Mode.Expanded) Expand(PageName);
         else if (_mode == Mode.Idle) AnimateTo(IdleSize());
+        ApplyAutoHide();
         AppState.Save();
     }
 

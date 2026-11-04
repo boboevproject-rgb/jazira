@@ -12,6 +12,7 @@ static class Native
     public const int GWL_EXSTYLE = -20;
     public const int WS_EX_TOOLWINDOW = 0x00000080;   // не показывать в Alt+Tab
     public const int WS_EX_NOACTIVATE = 0x08000000;   // клик по острову не отнимает фокус у вашего окна
+    public const int WS_EX_TRANSPARENT = 0x00000020;  // мышь проходит сквозь окно (спрятанный остров)
 
     public const uint SWP_NOSIZE = 0x0001, SWP_NOZORDER = 0x0004, SWP_NOACTIVATE = 0x0010;
 

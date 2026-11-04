@@ -27,6 +27,7 @@ public sealed class AppState
     public double FloatY { get; set; } = 0.25;
     public double Scale { get; set; } = 1.0;
     public bool CoverTint { get; set; } = true;
+    public bool AutoHide { get; set; }            // прятать остров, пока к нему не подведут курсор
 
     // Функции
     public bool Lyrics { get; set; } = true;

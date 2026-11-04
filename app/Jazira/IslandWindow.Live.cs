@@ -90,10 +90,10 @@ public partial class IslandWindow
         LyricNext.Text = l != null && next >= 0 && next < l.Length ? l[next].Text : "";
     }
 
-    // 30 раз в секунду, только пока играет музыка: эквалайзер и смена строк текста
+    // 30 раз в секунду, только пока играет музыка и остров не спрятан: эквалайзер и смена строк текста
     void UpdateFast()
     {
-        bool on = !_instant && _media.IsPlaying;
+        bool on = !_instant && _media.IsPlaying && !_tucked;
         if (on != _fast.IsEnabled) _fast.IsEnabled = on;
     }
 
@@ -287,6 +287,7 @@ public partial class IslandWindow
 
         void Base(string lang)
         {
+            Reveal(); // прошлый снимок мог быть «спрятанным»
             Strings.Lang = lang;
             st.Theme = "night"; st.Shape = "pill"; st.Docked = true; st.CoverTint = true;
             st.Koi = true; st.Lyrics = true; st.Indicators = true; st.LocalPage = true; st.Prayer = false;
@@ -417,6 +418,8 @@ public partial class IslandWindow
             yield return ($"{lang}-peek-camera", () => { Base(lang); Collapse(); OnPrivacy("Zoom", null); });
             yield return ($"{lang}-peek-prayer", () => { Base(lang); Collapse(); PrayerPeek(3, DateTime.Today.AddHours(15).AddMinutes(12)); });
             yield return ($"{lang}-peek-update", () => { Base(lang); Collapse(); ShowUpdateReady(new Version(0, 3, 0), () => { }); });
+            yield return ($"{lang}-peek-autohide", () => { Base(lang); Collapse();
+                ShowPeek("info", Res("Lagoon"), HideGeo, Strings.Get("autohide.on"), Strings.Get("autohide.hintTop"), seconds: 4); });
         }
 
         foreach (var theme in Theme.All.Skip(1))
@@ -428,6 +431,11 @@ public partial class IslandWindow
         yield return ("ru-notch-idle", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Collapse(); });
         yield return ("ru-notch-music", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Track(true); Lyrics(); Expand("music"); });
         yield return ("ru-notch-peek", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Collapse(); VolumePeek(0.4f, false); });
+        // Автоскрытие: на месте острова — только полоска
+        yield return ("ru-hidden", () => { Base("ru"); Collapse(); Tuck(); });
+        yield return ("ru-notch-hidden", () => { Base("ru"); st.Shape = "notch"; ApplyLook(); Collapse(); Tuck(); });
+        yield return ("ru-float-hidden", () => { Base("ru"); st.Docked = false; ApplyLook(); Collapse(); Tuck(); });
+        yield return ("ru-theme-light-hidden", () => { Base("ru"); st.Theme = "light"; ApplyLook(); Collapse(); Tuck(); });
     }
 
     // Снимки: подставить историю питомца — age дней с целью, из них последние streak подряд

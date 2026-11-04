@@ -76,6 +76,8 @@ sealed class TrayIcon : IDisposable
         place.DropDownItems.Add(Item(Strings.Get("place.dock"), () => Set(() => st.Docked = true), st.Docked));
         place.DropDownItems.Add(Item(Strings.Get("place.float"), () => Set(() => st.Docked = false), !st.Docked));
         place.DropDownItems.Add(new Forms.ToolStripSeparator());
+        place.DropDownItems.Add(Item(Strings.Get("place.autohide"), () => Set(() => st.AutoHide = !st.AutoHide), st.AutoHide));
+        place.DropDownItems.Add(new Forms.ToolStripSeparator());
         var screens = Forms.Screen.AllScreens;
         for (int i = 0; i < screens.Length; i++)
         {

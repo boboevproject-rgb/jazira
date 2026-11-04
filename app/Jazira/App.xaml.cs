@@ -61,6 +61,7 @@ public partial class App : Application
         {
             AppState.ReadOnly = true;
             AppState.Current.ShowIsland = true; // только в памяти
+            AppState.Current.AutoHide = false;  // автоскрытие тест включает сам (IslandWindow.Test.cs)
             var dir = live + 1 < e.Args.Length ? e.Args[live + 1] : "live-test";
             Directory.CreateDirectory(dir);
             var test = new IslandWindow { TestOffscreen = true };
