@@ -3,7 +3,8 @@
 [English below ↓](#english)
 
 Сайт приложения **Jazira** — «острова» у верхнего края экрана Windows: музыка, тексты песен,
-таймер фокуса, вода, полка файлов, задачи. Пока приложения нет, сайт работает как **лист ожидания**.
+таймер фокуса, вода, полка файлов, задачи. Кнопка «Скачать» ведёт на архив релиза; если в `CONFIG`
+убрать ссылку, сайт снова станет **листом ожидания**.
 Автор — Bilol. Языки: русский, английский, таджикский.
 
 Статический сайт без сборки и без зависимостей: HTML + CSS + JS. Лицензия — [MIT](LICENSE).
@@ -11,9 +12,9 @@
 **Сайт онлайн: https://boboevproject-rgb.github.io/jazira/**
 
 **Само приложение для Windows** — в папке [`app/`](app/README.md): исходники, сборка, установка.
-Скачать: **[Jazira 0.2.0 — ранняя версия](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.2.0)**.
-В ней темы, остров можно открепить от верха экрана, полка для файлов, тексты песен в такт,
-рыбка-кои, индикаторы, погода и курс сомони, автообновление.
+Скачать: **[все релизы](https://github.com/boboevproject-rgb/jazira/releases)**. В 0.3 — рыбка-питомец,
+«Мой день» с задачами, таймерами и встречей из календаря, скачанное и снимки экрана на полке,
+страница «Система», Ctrl+Alt+J, а памяти остров берёт втрое меньше (около 75 МБ).
 
 ![Jazira](assets/og.png)
 
@@ -44,7 +45,7 @@
 |---|---|
 | `brand`, `author` | название продукта и автор — подставляются во все тексты |
 | `formUrl` | адрес Apps Script (`…/exec`) для форм — см. [apps-script/README.md](apps-script/README.md) |
-| `downloadUrl`, `version` | когда появится установщик: сайт сам переключится с листа ожидания на «Скачать» |
+| `downloadUrl`, `version` | ссылка на архив релиза и его версия: есть ссылка — на сайте «Скачать», нет — лист ожидания. При новом релизе поменять обе |
 | `telegram` | ссылка на Telegram — появится в подвале (пусто — ссылки нет) |
 
 Тексты — в [`assets/i18n.js`](assets/i18n.js), иконка — [`assets/icon.svg`](assets/icon.svg)
@@ -58,6 +59,7 @@ assets/style.css      стили (тёмная тема «море и закат
 assets/i18n.js        все тексты на ru / en / tg
 assets/main.js        CONFIG, переводы, демо острова, формы
 assets/icon.svg       иконка (исходник), icon-*.png и og.png собираются из него
+assets/video/         ролик острова на ru / en / tg (mp4) и обложки к нему (jpg)
 apps-script/Code.gs   приём форм: Google-таблица + Telegram
 tools/                локальный сервер, проверки, сборка картинок
 ```
@@ -75,7 +77,7 @@ tools/                локальный сервер, проверки, сбо�
 ```bash
 python tools/check_i18n.py          # все ключи на месте, три языка, таджикский алфавит
 node tools/test-apps-script.mjs     # логика приёма форм (без Google)
-python tools/test_page.py           # браузер без окна: 3 языка × ПК/телефон, формы, демо; скриншоты в shots/
+python tools/test_page.py           # браузер без окна: 3 языка × ПК/телефон, формы, демо, ролик, «Скачать»; скриншоты в shots/
 python tools/render_assets.py       # пересобрать icon-*.png и og.png после правок иконки
 ```
 
@@ -102,19 +104,38 @@ python tools/render_assets.py       # пересобрать icon-*.png и og.pn
 
 ---
 
+## Ролик на сайте
+
+Ролик снимает само приложение — подставные данные, настоящие анимации (нужен ffmpeg):
+
+```bash
+Jazira.exe --video <папка> <путь к ffmpeg.exe> ru
+Jazira.exe --video <папка> <путь к ffmpeg.exe> en
+Jazira.exe --video <папка> <путь к ffmpeg.exe> tg
+```
+
+Получившиеся `jazira-<язык>.mp4` кладутся в `assets/video/`, обложка — кадр с музыкой на 4-й секунде:
+
+```bash
+ffmpeg -ss 4 -i assets/video/jazira-ru.mp4 -frames:v 1 -q:v 5 assets/video/jazira-ru.jpg
+```
+
+Сайт сам берёт ролик на языке страницы и играет его только пока он на экране; при настройке
+«уменьшить движение» — только по кнопке.
+
 <a id="english"></a>
 
 ## English
 
 **Jazira** is a landing page for a Windows app that turns the top edge of the screen into a small
 "island" for music, lyrics, a focus timer, water reminders, a file shelf and tasks. Until the app
-ships, the site collects a waitlist. Languages: Russian, English, Tajik. Plain HTML + CSS + JS,
+ships, the site collects a waitlist; with a release link in `CONFIG` it shows a Download button instead. Languages: Russian, English, Tajik. Plain HTML + CSS + JS,
 no build step, no dependencies. Licensed under [MIT](LICENSE).
 
 **Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** lives in
-[`app/`](app/README.md). Download: **[v0.2.0 early release](https://github.com/boboevproject-rgb/jazira/releases/tag/v0.2.0)**
-(themes, detachable island, file shelf, synced lyrics, koi, indicators, weather and somoni rates,
-auto-update).
+[`app/`](app/README.md). Download: **[releases](https://github.com/boboevproject-rgb/jazira/releases)**
+(0.3: a koi pet, "My day" with tasks, timers and the next meeting, downloads and screenshots on the shelf,
+a System page, Ctrl+Alt+J, and about 75 MB of memory).
 
 ### Quick start
 

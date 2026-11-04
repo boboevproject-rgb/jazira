@@ -253,6 +253,13 @@ h1 { margin: 22px 0 0; font: 700 clamp(30px, 3.9vw, 48px)/1.1 var(--display); le
 .sec-title { margin: 0; font: 700 clamp(26px, 3.4vw, 42px)/1.12 var(--display); letter-spacing: -.02em; text-wrap: balance; }
 .sec-lede { margin: 14px 0 0; max-width: 38em; color: var(--mist); font-size: 18px; }
 
+/* ===== Ролик ===== */
+.clip {
+  margin: 0; overflow: hidden; border-radius: 20px; background: #0a1b26; border: 1px solid rgba(238, 245, 243, .12);
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .9), 0 0 0 8px rgba(238, 245, 243, .03);
+}
+.clip video { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; background: #0a1b26; }
+
 /* ===== Возможности: сетка карточек ===== */
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .card { position: relative; overflow: hidden; padding: 26px 24px 24px; border-radius: 22px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--panel-2), var(--panel)); }

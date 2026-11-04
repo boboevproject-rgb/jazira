@@ -17,6 +17,7 @@ const T = {
 
 "nav.label": {"ru": "Главное меню", "en": "Main menu", "tg": "Менюи асосӣ"},
 "nav.features": {"ru": "Возможности", "en": "Features", "tg": "Имкониятҳо"},
+"nav.video": {"ru": "Видео", "en": "Video", "tg": "Видео"},
 "nav.principles": {"ru": "Принципы", "en": "Principles", "tg": "Принсипҳо"},
 "nav.faq": {"ru": "Вопросы", "en": "FAQ", "tg": "Саволҳо"},
 "nav.join": {"ru": "Записаться", "en": "Join waitlist", "tg": "Номнавис шудан"},
@@ -75,6 +76,15 @@ const T = {
 "demo.cap.files": {"ru": "Перетащите файл на остров — он подождёт вас там.", "en": "Drop a file on the island and it waits for you there.", "tg": "Файлро ба ҷазира кашед — он дар он ҷо интизори шумо мешавад."},
 "demo.cap.charge": {"ru": "Подключили зарядку — остров коротко это подтвердит.", "en": "Plug in the charger and the island gives a quick nod.", "tg": "Барқгирро пайваст кардед — ҷазира кӯтоҳ тасдиқ мекунад."},
 
+"vid.kicker": {"ru": "Без монтажа", "en": "No editing", "tg": "Бе монтаж"},
+"vid.title": {"ru": "Настоящий остров за 25 секунд", "en": "The real island in 25 seconds", "tg": "Ҷазираи воқеӣ дар 25 сония"},
+"vid.lede": {
+  "ru": "Ролик снят самим приложением: анимации настоящие, данные — для примера. Музыка с текстом песни, «Мой день» со встречей, полка, вода с рыбкой, «Система» и уведомление о скачанном файле.",
+  "en": "Recorded by the app itself: the animations are real, the data is made up. Music with lyrics, My day with a meeting, the shelf, water with the koi, the System page and a download notice.",
+  "tg": "Наворро худи барнома сабт кардааст: аниматсияҳо воқеӣ, маълумот барои намуна. Мусиқӣ бо матни суруд, «Рӯзи ман» бо вохӯрӣ, раф, об бо моҳии кой, «Система» ва огоҳӣ дар бораи файли боргирифта."
+},
+"vid.label": {"ru": "Ролик: остров {brand} в работе", "en": "Video: the {brand} island at work", "tg": "Навор: ҷазираи {brand} дар амал"},
+
 "feat.title": {"ru": "Маленький остров, много дел", "en": "A small island that does a lot", "tg": "Ҷазираи хурд, корҳои зиёд"},
 "feat.lede": {
   "ru": "Ничего не нужно настраивать и закреплять: остров сам показывает то, что важно прямо сейчас.",
@@ -105,17 +115,35 @@ const T = {
   "en": "Set a daily goal and your hours. {brand} reminds you to take a sip and shows how much you've had.",
   "tg": "Ҳадафи рӯзона ва соатҳои кориро муқаррар кунед — {brand} нӯшидани обро ёдрас мекунад ва нишон медиҳад, ки чӣ қадар нӯшидаед."
 },
+"f.koi.t": {"ru": "Рыбка-кои растёт вместе с вами", "en": "A koi that grows with you", "tg": "Моҳии кой бо шумо калон мешавад"},
+"f.koi.d": {
+  "ru": "Пейте норму воды день за днём — кои подрастает и меняет окраску: через три дня она трёхцветная, через две недели золотая, а через неделю появится вторая. Пропустили день — загрустит, но не пропадёт.",
+  "en": "Hit your water goal day after day and the koi grows and changes colour: three-colour after three days, gold after two weeks, and a second fish joins after a week. Miss a day and it gets sad, but it never dies.",
+  "tg": "Меъёри обро рӯз ба рӯз нӯшед — кой калон мешавад ва ранг иваз мекунад: пас аз се рӯз серанга, пас аз ду ҳафта тиллоӣ, пас аз як ҳафта моҳии дуюм пайдо мешавад. Агар як рӯзро аз даст диҳед, ғамгин мешавад, вале намемирад."
+},
 "f.files.t": {"ru": "Полка для файлов", "en": "A shelf for files", "tg": "Рафи файлҳо"},
 "f.files.d": {
-  "ru": "Бросьте файл на остров, переключитесь в чат или почту и вытащите его туда. Сам файл остаётся на своём месте.",
-  "en": "Drop a file on the island, switch to a chat or email and drag it out there. The file itself never moves.",
-  "tg": "Файлро ба ҷазира партоед, ба чат ё почта гузаред ва онро ба он ҷо кашед. Худи файл дар ҷояш мемонад."
+  "ru": "Новые скачанные файлы и снимки экрана сами ложатся на полку, а Ctrl+PrtScn снимает экран. Перетащите файл с полки в чат или почту — сам он остаётся на своём месте.",
+  "en": "New downloads and screenshots land on the shelf by themselves, and Ctrl+PrtScn takes a screenshot. Drag a file from the shelf into a chat or email; the file itself never moves.",
+  "tg": "Файлҳои нави боргирифта ва аксҳои экран худашон ба раф меафтанд, Ctrl+PrtScn бошад, экранро акс мегирад. Файлро аз раф ба чат ё почта кашед — худи файл дар ҷояш мемонад."
 },
-"f.tasks.t": {"ru": "Задачи с напоминанием", "en": "Tasks with reminders", "tg": "Вазифаҳо бо ёдраскунӣ"},
+"f.tasks.t": {"ru": "«Мой день»: задачи и таймеры", "en": "My day: tasks and timers", "tg": "«Рӯзи ман»: вазифаҳо ва таймерҳо"},
 "f.tasks.d": {
-  "ru": "Запишите дело и поставьте время — в нужную минуту остров мягко напомнит.",
-  "en": "Write a task down, give it a time, and the island nudges you at the right minute.",
-  "tg": "Корро нависед ва вақт гузоред — дар дақиқаи лозимӣ ҷазира оҳиста ёдрас мекунад."
+  "ru": "Напишите «позвонить маме в 18:30» — остров сам поймёт время и напомнит. Можно запустить несколько таймеров сразу, а в Рамазан — видеть отсчёт до ифтара и сухура.",
+  "en": "Type “call mom at 18:30” and the island picks up the time and reminds you. Several timers can run at once, and in Ramadan it counts down to iftar and suhoor.",
+  "tg": "Нависед «соати 18:30 ба модар занг задан» — ҷазира вақтро худаш мефаҳмад ва ёдрас мекунад. Якчанд таймер якбора кор мекунанд, дар Рамазон бошад, ҳисоби баръакс то ифтор ва саҳарӣ."
+},
+"f.meet.t": {"ru": "Ближайшая встреча", "en": "Your next meeting", "tg": "Вохӯрии наздиктарин"},
+"f.meet.d": {
+  "ru": "Вставьте секретную iCal-ссылку Google или Outlook — остров покажет, сколько осталось до встречи, и кнопку «Подключиться».",
+  "en": "Paste the secret iCal link from Google or Outlook and the island shows how long until your meeting, with a Join button.",
+  "tg": "Пайванди махфии iCal-и Google ё Outlook-ро гузоред — ҷазира нишон медиҳад, ки то вохӯрӣ чӣ қадар монд, бо тугмаи «Пайвастан»."
+},
+"f.sys.t": {"ru": "Страница «Система»", "en": "A System page", "tg": "Саҳифаи «Система»"},
+"f.sys.d": {
+  "ru": "Процессор с графиком, память, нагрев, скорость сети и износ батареи — без прав администратора и драйверов. Когда заряда останется 10 %, остров предупредит.",
+  "en": "CPU with a graph, memory, heat, network speed and battery wear, with no admin rights or drivers. When the battery drops to 10%, the island warns you.",
+  "tg": "Протсессор бо график, хотира, гармшавӣ, суръати шабака ва фарсудашавии батарея — бе ҳуқуқи администратор ва драйверҳо. Вақте ки 10 % барқ мемонад, ҷазира огоҳ мекунад."
 },
 "f.keys.t": {"ru": "Громкость, яркость, раскладка", "en": "Volume, brightness, keyboard", "tg": "Овоз, равшанӣ, клавиатура"},
 "f.keys.d": {
@@ -134,9 +162,9 @@ const T = {
 "pr.lede": {"ru": "Так мы делаем {brand} с первой версии.", "en": "How we're building {brand} from the first version.", "tg": "Мо {brand}-ро аз версияи аввал ҳамин тавр месозем."},
 "pr1.t": {"ru": "Не мешает работать", "en": "Stays out of the way", "tg": "Ба кор халал намерасонад"},
 "pr1.d": {
-  "ru": "Пока ничего не происходит, остров не рисует и не нагружает процессор. Игры и фильмы во весь экран он не перекрывает.",
-  "en": "When nothing is happening, the island doesn't draw or load the CPU. It never covers full-screen games and films.",
-  "tg": "Вақте ки ҳеҷ чиз рӯй намедиҳад, ҷазира расм намекашад ва протсессорро бор намекунад. Бозиҳо ва филмҳои дар тамоми экран кушодаро намепӯшонад."
+  "ru": "Свёрнутый остров занимает около 75 МБ памяти и около 2 % одного ядра процессора. Игры и фильмы во весь экран он не перекрывает.",
+  "en": "Collapsed, the island uses about 75 MB of memory and about 2% of one CPU core. It never covers full-screen games and films.",
+  "tg": "Ҷазираи пӯшида тақрибан 75 МБ хотира ва тақрибан 2 %-и як ядрои протсессорро истифода мебарад. Бозиҳо ва филмҳои дар тамоми экран кушодаро намепӯшонад."
 },
 "pr2.t": {"ru": "Данные остаются у вас", "en": "Your data stays with you", "tg": "Маълумот назди шумо мемонад"},
 "pr2.d": {
@@ -159,7 +187,7 @@ const T = {
   "tg": "Email ё Telegram-ро гузоред — дар рӯзи баромади версияи аввал пайвандро мефиристем."
 },
 "wls.title.live": {"ru": "Скачайте {brand}", "en": "Get {brand}", "tg": "{brand}-ро боргирӣ кунед"},
-"wls.lede.live": {"ru": "Windows 10 или 11, 64 бита.", "en": "Windows 10 or 11, 64-bit.", "tg": "Windows 10 ё 11, 64-бит."},
+"wls.lede.live": {"ru": "Windows 10 или 11, 64 бита. Архив 70 МБ, права администратора не нужны.", "en": "Windows 10 or 11, 64-bit. A 70 MB download, no admin rights needed.", "tg": "Windows 10 ё 11, 64-бит. Архив 70 МБ, ҳуқуқи администратор лозим нест."},
 
 "fb.kicker": {"ru": "Обратная связь", "en": "Feedback", "tg": "Фикру мулоҳиза"},
 "fb.title": {"ru": "Чего не хватает?", "en": "What's missing?", "tg": "Чӣ намерасад?"},
@@ -176,17 +204,17 @@ const T = {
 "fb.err.short": {"ru": "Напишите хотя бы пару слов.", "en": "Write at least a few words.", "tg": "Ақаллан чанд калима нависед."},
 
 "faq.title": {"ru": "Вопросы", "en": "Questions", "tg": "Саволҳо"},
-"faq.q1": {"ru": "Когда выйдет {brand}?", "en": "When is {brand} coming out?", "tg": "{brand} кай мебарояд?"},
+"faq.q1": {"ru": "Как установить?", "en": "How do I install it?", "tg": "Чӣ тавр насб кунам?"},
 "faq.a1": {
-  "ru": "Ранняя версия {early} уже доступна для пробы — ссылка на первом экране. Полную версию пришлём всем из листа ожидания в день выхода.",
-  "en": "Early version {early} is already out to try — the link is at the top of the page. We'll send the full version to everyone on the waitlist on launch day.",
-  "tg": "Версияи ибтидоии {early} аллакай барои санҷиш дастрас аст — пайванд дар экрани аввал. Версияи пурраро дар рӯзи баромад ба ҳамаи аъзои рӯйхати интизорӣ мефиристем."
+  "ru": "Скачайте архив, распакуйте его и запустите install.bat — права администратора не нужны. Приложение пока без цифровой подписи, поэтому Windows может предупредить: нажмите «Подробнее» → «Выполнить в любом случае». Дальше {brand} обновляется сама.",
+  "en": "Download the archive, unzip it and run install.bat; no admin rights needed. The app isn't code-signed yet, so Windows may warn you: click More info → Run anyway. After that, {brand} updates itself.",
+  "tg": "Архивро боргирӣ кунед, кушоед ва install.bat-ро иҷро кунед — ҳуқуқи администратор лозим нест. Барнома ҳоло имзои рақамӣ надорад, бинобар ин Windows метавонад огоҳ кунад: «More info» → «Run anyway»-ро пахш кунед. Баъд {brand} худаш навсозӣ мешавад."
 },
-"faq.q2": {"ru": "Сколько это будет стоить?", "en": "How much will it cost?", "tg": "Нархаш чанд мешавад?"},
+"faq.q2": {"ru": "Сколько это стоит?", "en": "How much does it cost?", "tg": "Нархаш чанд аст?"},
 "faq.a2": {
-  "ru": "Условия объявим до выхода, и первыми их узнают те, кто в листе ожидания.",
-  "en": "We'll announce pricing before launch, and people on the waitlist will hear first.",
-  "tg": "Шартҳоро пеш аз баромад эълон мекунем ва аввал онҳое мефаҳманд, ки дар рӯйхати интизорӣ ҳастанд."
+  "ru": "Сейчас {brand} бесплатна, а её исходный код открыт на <a href=\"https://github.com/boboevproject-rgb/jazira\" target=\"_blank\" rel=\"noopener\">GitHub</a> по лицензии MIT.",
+  "en": "Right now {brand} is free, and its source code is open on <a href=\"https://github.com/boboevproject-rgb/jazira\" target=\"_blank\" rel=\"noopener\">GitHub</a> under the MIT license.",
+  "tg": "Ҳоло {brand} ройгон аст ва рамзи ибтидоии он дар <a href=\"https://github.com/boboevproject-rgb/jazira\" target=\"_blank\" rel=\"noopener\">GitHub</a> бо иҷозатномаи MIT кушода аст."
 },
 "faq.q3": {"ru": "На каких компьютерах заработает?", "en": "Which PCs will it run on?", "tg": "Дар кадом компютерҳо кор мекунад?"},
 "faq.a3": {"ru": "На Windows 10 и Windows 11, 64 бита.", "en": "Windows 10 and Windows 11, 64-bit.", "tg": "Дар Windows 10 ва Windows 11, 64-бит."},
@@ -198,9 +226,9 @@ const T = {
 },
 "faq.q5": {"ru": "Что будет с моими данными?", "en": "What happens to my data?", "tg": "Бо маълумоти ман чӣ мешавад?"},
 "faq.a5": {
-  "ru": "В приложении — ничего: всё хранится на вашем компьютере. С этого сайта к нам попадает только то, что вы сами отправили через формы, и мы используем это лишь для ответа и письма о выходе.",
-  "en": "In the app, nothing: everything stays on your computer. This site only receives what you send through the forms, and we use it only to reply and to tell you about the launch.",
-  "tg": "Дар барнома — ҳеҷ чиз: ҳама дар компютери шумо мемонад. Аз ин сайт ба мо танҳо он чизе мерасад, ки худатон тавассути формаҳо фиристодед ва мо онро танҳо барои ҷавоб ва хабари баромад истифода мебарем."
+  "ru": "Приложение хранит всё на вашем компьютере, а в интернет ходит только за текстами песен, погодой, курсом сомони и обновлениями — отправляя туда лишь название песни, город и дату. Календарь — только если вы сами вставили ссылку. С этого сайта к нам попадает только то, что вы отправили через форму, и мы используем это лишь для ответа.",
+  "en": "The app keeps everything on your computer and only goes online for lyrics, weather, the somoni rate and updates, sending nothing but the song title, the city and the date. Your calendar only if you paste its link yourself. This site only receives what you send through the form, and we use it only to reply.",
+  "tg": "Барнома ҳама чизро дар компютери шумо нигоҳ медорад ва ба интернет танҳо барои матни сурудҳо, обу ҳаво, қурби сомонӣ ва навсозӣ мебарояд — ва ба он ҷо танҳо номи суруд, шаҳр ва санаро мефиристад. Тақвим — танҳо агар худатон пайвандашро гузоред. Аз ин сайт ба мо танҳо он чизе мерасад, ки тавассути форма фиристодед ва мо онро танҳо барои ҷавоб истифода мебарем."
 },
 "faq.q6": {"ru": "Кто делает {brand}?", "en": "Who's behind {brand}?", "tg": "{brand}-ро кӣ месозад?"},
 "faq.a6": {

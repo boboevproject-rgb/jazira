@@ -9,8 +9,8 @@ const CONFIG = {
   // Пока пусто: на localhost формы уходят в tools/serve.py, на сайте показывают «форма не подключена».
   formUrl: "",
   // Ссылка на установщик и номер версии. Пока ссылки нет, сайт работает как лист ожидания.
-  downloadUrl: "",
-  version: "",
+  downloadUrl: "https://github.com/boboevproject-rgb/jazira/releases/download/v0.3.0/Jazira-0.3.0-win-x64.zip",
+  version: "0.3",
   // Ранняя версия для пробы, пока полной нет: ссылка под формами листа ожидания (пусто — скрыта).
   earlyUrl: "https://github.com/boboevproject-rgb/jazira/releases/tag/v0.2.0",
   earlyVersion: "0.2",
@@ -56,6 +56,19 @@ function applyLang(lang) {
   sw.style.setProperty("--i", LANGS.indexOf(LANG));
   sw.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
   store.set("jazira-lang", LANG);
+  syncClip();
+}
+
+// Ролик на языке страницы: после смены языка подменяем файл и обложку, играет ли он — не меняется
+function syncClip() {
+  document.querySelectorAll(".js-clip").forEach(v => {
+    const src = `assets/video/jazira-${LANG}.mp4`;
+    if (v.getAttribute("src") === src) return;
+    const playing = !v.paused;
+    v.poster = `assets/video/jazira-${LANG}.jpg`;
+    v.src = src;
+    if (playing) v.play().catch(() => {});
+  });
 }
 
 // ?lang=tg в адресе → сохранённый выбор → язык браузера → русский
@@ -143,6 +156,18 @@ setInterval(() => {
 }, 1000);
 
 showState("idle");
+
+// ---- Ролик: играет, только пока виден и вкладка открыта; при «меньше движения» — только по кнопке --
+document.querySelectorAll(".js-clip").forEach(v => {
+  if (reduceMotion) { v.controls = true; return; }
+  let seen = false;
+  const sync = () => {
+    if (seen && !document.hidden) v.play().catch(() => { v.controls = true; });
+    else v.pause();
+  };
+  new IntersectionObserver(es => { seen = es[0].isIntersecting; sync(); }, { threshold: .35 }).observe(v);
+  document.addEventListener("visibilitychange", sync);
+});
 
 // ---- Формы ------------------------------------------------------------------------------------------
 const LOCAL = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);

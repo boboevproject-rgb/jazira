@@ -22,12 +22,17 @@ T = load_dict()
 VIEWPORTS = {"desktop": (1366, 900), "mobile": (390, 844)}
 STATES = ["idle", "music", "focus", "water", "files", "charge"]
 problems = []
-# Версия «попробовать раннюю» — та же, что в CONFIG сайта, чтобы тест не правили при каждом релизе
-EARLY = re.search(r'earlyVersion:\s*"([^"]*)"', (ROOT / "assets" / "main.js").read_text(encoding="utf-8")).group(1)
+# Версии и ссылка на скачивание — те же, что в CONFIG сайта, чтобы тест не правили при каждом релизе
+_MAIN = (ROOT / "assets" / "main.js").read_text(encoding="utf-8")
+EARLY = re.search(r'earlyVersion:\s*"([^"]*)"', _MAIN).group(1)
+DOWNLOAD = re.search(r'downloadUrl:\s*"([^"]*)"', _MAIN).group(1)
+VERSION = re.search(r'\bversion:\s*"([^"]*)"', _MAIN).group(1)
+LIVE = bool(DOWNLOAD)  # есть ссылка — сайт в режиме «вышло», листа ожидания нет
 
 
 def text(key, lang):
-    return T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol").replace("{early}", EARLY)
+    return (T[key][lang].replace("{brand}", "Jazira").replace("{author}", "Bilol")
+            .replace("{early}", EARLY).replace("{version}", VERSION))
 
 
 def expect(ok, what):
@@ -102,9 +107,32 @@ def main():
         page.goto(f"{base}/?lang=ru")
         page.wait_for_load_state("networkidle")
 
-        early = page.locator(".js-early a")
-        expect(early.count() == 2 and early.first.is_visible() and "/releases/" in (early.first.get_attribute("href") or ""),
-               "ранняя версия: ссылки под обеими формами ведут на релиз")
+        if LIVE:
+            hrefs = page.eval_on_selector_all(".js-dl", "es => es.map(e => e.getAttribute('href'))")
+            expect(len(hrefs) == 3 and all(h == DOWNLOAD for h in hrefs), f"скачать: все три кнопки ведут на архив {hrefs}")
+            expect(page.locator(".hero .cta .js-dl").is_visible(), "скачать: кнопка на первом экране видна")
+            expect(page.locator(".hero .cta small").inner_text() == text("hero.version", "ru"), "скачать: подписана версия")
+            expect(page.locator(".js-wl").first.is_hidden() and page.locator(".js-early").first.is_hidden(),
+                   "скачать: лист ожидания и ранняя версия спрятаны")
+        else:
+            early = page.locator(".js-early a")
+            expect(early.count() == 2 and early.first.is_visible() and "/releases/" in (early.first.get_attribute("href") or ""),
+                   "ранняя версия: ссылки под обеими формами ведут на релиз")
+
+        # Ролик: файл на языке страницы, играет, когда на виду
+        clip = page.locator(".js-clip")
+        expect(clip.get_attribute("src") == "assets/video/jazira-ru.mp4", "ролик: русский файл")
+        for lang in ("ru", "en", "tg"):
+            for ext in ("mp4", "jpg"):
+                r = page.request.get(f"{base}/assets/video/jazira-{lang}.{ext}")
+                expect(r.ok and len(r.body()) > 5000, f"ролик: assets/video/jazira-{lang}.{ext} отдаётся ({r.status})")
+        expect(page.evaluate("document.querySelector('.js-clip').paused"), "ролик: вне экрана не играет")
+        clip.scroll_into_view_if_needed()
+        page.wait_for_timeout(2500)
+        st = page.evaluate("(() => { const v = document.querySelector('.js-clip'); return [v.paused, v.currentTime, v.videoWidth, v.videoHeight]; })()")
+        expect(not st[0] and st[1] > 0.5 and st[2:] == [1040, 520], f"ролик: на экране играет 1040×520 (paused={st[0]}, t={st[1]:.1f}, {st[2]}×{st[3]})")
+        page.evaluate("window.scrollTo(0, 0)")
+        page.wait_for_timeout(600)
 
         idle_w = page.eval_on_selector("#island", "e => e.getBoundingClientRect().width")
         page.click(".chips button[data-s=music]")
@@ -114,14 +142,15 @@ def main():
                f"демо: кнопка «Музыка» раскрывает остров ({idle_w:.0f} → {music_w:.0f}px)")
         expect(page.inner_text("#cap") == text("demo.cap.music", "ru"), "демо: подпись сменилась")
 
-        hero = page.locator(".hero .js-wl")
-        hero.locator("input[name=contact]").fill("abc")
-        hero.locator("button[type=submit]").click()
-        expect(hero.locator(".wl-msg").inner_text() == text("wl.err.bad", "ru"), "лист ожидания: опечатка в контакте ловится")
-        hero.locator("input[name=contact]").fill("@bilol_test")
-        hero.locator("button[type=submit]").click()
-        page.wait_for_selector(".hero .js-wl.joined", timeout=5000)
-        expect(page.locator(".js-wl.joined").count() == 2, "лист ожидания: обе формы показывают «вы в списке»")
+        if not LIVE:
+            hero = page.locator(".hero .js-wl")
+            hero.locator("input[name=contact]").fill("abc")
+            hero.locator("button[type=submit]").click()
+            expect(hero.locator(".wl-msg").inner_text() == text("wl.err.bad", "ru"), "лист ожидания: опечатка в контакте ловится")
+            hero.locator("input[name=contact]").fill("@bilol_test")
+            hero.locator("button[type=submit]").click()
+            page.wait_for_selector(".hero .js-wl.joined", timeout=5000)
+            expect(page.locator(".js-wl.joined").count() == 2, "лист ожидания: обе формы показывают «вы в списке»")
 
         fb = page.locator(".js-fb")
         fb.locator("button[type=submit]").click()
@@ -134,18 +163,26 @@ def main():
 
         page.click(".lang button[data-lang=tg]")
         expect(page.evaluate("document.documentElement.lang") == "tg", "язык: переключился на таджикский")
+        expect(clip.get_attribute("src") == "assets/video/jazira-tg.mp4" and clip.get_attribute("poster") == "assets/video/jazira-tg.jpg",
+               "язык: ролик и обложка сменились на таджикские")
         expect(fb.locator(".fb-msg").inner_text() == text("fb.ok", "tg"), "язык: сообщение формы тоже переведено")
         page.goto(f"{base}/")  # без ?lang — язык должен взяться из сохранённого выбора
         page.wait_for_load_state("networkidle")
         expect(page.evaluate("document.documentElement.lang") == "tg", "язык: выбор запомнился после перезагрузки")
-        expect(page.locator(".js-wl.joined").count() == 2, "лист ожидания: запись запомнилась после перезагрузки")
+        if not LIVE:
+            expect(page.locator(".js-wl.joined").count() == 2, "лист ожидания: запись запомнилась после перезагрузки")
+        expect(page.locator(".js-clip").get_attribute("src") == "assets/video/jazira-tg.mp4", "язык: ролик сразу таджикский после перезагрузки")
         ctx.close()
         browser.close()
 
     server.shutdown()
     recs = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
-    expect([r["action"] for r in recs] == ["waitlist", "feedback"], f"сервер принял ровно 2 заявки: {[r['action'] for r in recs]}")
-    expect(any(r.get("contact") == "@bilol_test" and r.get("lang") == "ru" for r in recs), "в заявке контакт и язык")
+    want = ["feedback"] if LIVE else ["waitlist", "feedback"]
+    expect([r["action"] for r in recs] == want, f"сервер принял ровно заявки {want}: {[r['action'] for r in recs]}")
+    if LIVE:
+        expect(any(r.get("contact") == "test@example.com" and r.get("lang") == "ru" for r in recs), "в заявке контакт и язык")
+    else:
+        expect(any(r.get("contact") == "@bilol_test" and r.get("lang") == "ru" for r in recs), "в заявке контакт и язык")
     print(f"\nскриншоты: {SHOTS}")
     print(f"проблем: {len(problems)}")
     sys.exit(1 if problems else 0)
