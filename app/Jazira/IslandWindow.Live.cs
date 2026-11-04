@@ -376,6 +376,11 @@ public partial class IslandWindow
             yield return ($"{lang}-shelf", () => { Base(lang); st.Shelf = new List<string>(shelf); Expand("shelf"); });
             yield return ($"{lang}-shelf-empty", () => { Base(lang); Expand("shelf"); });
             yield return ($"{lang}-shelf-drop", () => { Base(lang); _dropHover = true; Expand("shelf"); });
+            yield return ($"{lang}-peek-download", () => { Base(lang); Collapse(); DownloadPeek(lang == "tg" ? "Шартнома.pdf" : "Договор аренды.pdf", 2_457_600, 1, null); });
+            yield return ($"{lang}-peek-download-long", () => { Base(lang); Collapse(); DownloadPeek("Отчёт_по_проекту_Jazira_ноябрь_2026_финальная_версия.docx", 734_003, 1, null); });
+            yield return ($"{lang}-peek-download-exe", () => { Base(lang); Collapse(); DownloadPeek("JaziraSetup-0.3.0.exe", 61_865_984, 1, null); });
+            yield return ($"{lang}-peek-downloads", () => { Base(lang); Collapse(); DownloadPeek("a.jpg", 1, 3, null); });
+            yield return ($"{lang}-peek-shot", () => { Base(lang); Collapse(); ShotPeek(@"C:\x.png", Strings.Format("shot.copied", "2880×1800")); });
             yield return ($"{lang}-focus", () => { Base(lang); _focus.Preview(TimeSpan.FromSeconds(24 * 60 + 12), true); Expand("focus"); });
             yield return ($"{lang}-water", () => { Base(lang); Water(1250, 0.3); Expand("water"); });
             yield return ($"{lang}-water-thirsty", () => { Base(lang); Water(500, 3.5); Expand("water"); });

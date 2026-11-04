@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -90,11 +91,15 @@ public partial class IslandWindow
         var items = AppState.Current.Shelf;
         ShelfTitle.Text = items.Count > 0 ? $"{Strings.Get("shelf.title")} · {items.Count}" : Strings.Get("shelf.title");
         ShelfClearText.Text = Strings.Get("shelf.clear");
+        ShelfShotText.Text = Strings.Get("shelf.shot");
+        ShelfShot.Visibility = AppState.Current.ShotsToShelf ? Visibility.Visible : Visibility.Collapsed;
+        ShelfShot.ToolTip = ShotKeyOk ? ShotKey : null;
         ShelfClear.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         ShelfZone.Visibility = items.Count == 0 || _dropHover ? Visibility.Visible : Visibility.Collapsed;
         ShelfZone.Stroke = _dropHover ? Res("Lagoon") : Res("Faint");
         ShelfZone.Fill = _dropHover ? Theme.Brush(((SolidColorBrush)Res("Lagoon")).Color, 0x1F) : Brushes.Transparent;
-        ShelfHint.Text = Strings.Get(_dropHover ? "shelf.drop" : "shelf.hint");
+        var st = AppState.Current;
+        ShelfHint.Text = Strings.Get(_dropHover ? "shelf.drop" : st.DownloadsToShelf && st.ShotsToShelf ? "shelf.hintAuto" : "shelf.hint");
         ShelfHint.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         ShelfItems.Children.Clear();
         foreach (var p in items) ShelfItems.Children.Add(MakeTile(p));
@@ -185,6 +190,163 @@ public partial class IslandWindow
     {
         try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }
         catch (Exception ex) { App.Log(ex); }
+    }
+
+    // Проводник с выделенным файлом
+    static void Reveal(string path)
+    {
+        try { Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true }); }
+        catch (Exception ex) { App.Log(ex); }
+    }
+
+    // ---- Скачанное и снимки экрана сами ложатся на полку -------------------------------------
+
+    const string ShotKey = "Ctrl+PrtScn";
+    const uint VK_SNAPSHOT = 0x2C;
+    // Программы и сценарии из уведомления не запускаем — только показываем в папке
+    static readonly string[] RiskyExt =
+    {
+        ".exe", ".msi", ".msix", ".msixbundle", ".appx", ".appxbundle", ".bat", ".cmd", ".com", ".scr", ".ps1",
+        ".vbs", ".vbe", ".js", ".jse", ".wsf", ".hta", ".lnk", ".url", ".reg", ".jar", ".cpl",
+    };
+
+    FolderWatch? _downloads, _shots;
+    HotKeys? _keys;
+    bool _shotBusy;
+    DateTime _dlLast;
+    int _dlCount;
+
+    public bool ShotKeyOk { get; private set; } = true;
+
+    // Пункт меню: «Снимки экрана — на полку · Ctrl+PrtScn» (и «занято», если клавишу держит другая программа)
+    public string ShotsMenuText() =>
+        $"{Strings.Get("f.shots")} · {ShotKey}" + (ShotKeyOk ? "" : $" — {Strings.Get("hotkey.busy")}");
+
+    void WireFiles()
+    {
+        _downloads = new FolderWatch(Dispatcher, KnownFolder.Downloads);
+        _shots = new FolderWatch(Dispatcher, KnownFolder.Screenshots);
+        _downloads.Arrived += OnDownloaded;
+        _shots.Arrived += OnShotsSaved;
+    }
+
+    void StartHotKeys()
+    {
+        _keys = new HotKeys(_hwnd);
+        Closed += (_, _) => _keys.Dispose();
+        ApplyHotKeys();
+    }
+
+    void ApplyFileFeatures()
+    {
+        var st = AppState.Current;
+        if (_downloads != null) _downloads.Enabled = st.DownloadsToShelf;
+        if (_shots != null) _shots.Enabled = st.ShotsToShelf;
+        ApplyHotKeys();
+    }
+
+    void ApplyHotKeys()
+    {
+        if (_keys == null) return;
+        if (AppState.Current.ShotsToShelf) ShotKeyOk = _keys.Set("shot", HotKeys.Ctrl, VK_SNAPSHOT, TakeScreenshot);
+        else { _keys.Remove("shot"); ShotKeyOk = true; }
+    }
+
+    void OnDownloaded(List<string> files)
+    {
+        AddToShelf(files);
+        var now = DateTime.Now;
+        // Несколько файлов подряд (архив распаковали в «Загрузки») — одно уведомление со счётчиком
+        bool more = _mode == Mode.Peek && _peekKind == "download" && now - _dlLast < TimeSpan.FromSeconds(8);
+        _dlCount = more ? _dlCount + files.Count : files.Count;
+        _dlLast = now;
+        var last = files[^1];
+        long size = 0;
+        try { size = new FileInfo(last).Length; } catch (Exception) { }
+        DownloadPeek(System.IO.Path.GetFileName(last), size, _dlCount, last);
+    }
+
+    void DownloadPeek(string name, long size, int count, string? path)
+    {
+        if (count > 1)
+        {
+            ShowPeek("download", Res("Lagoon"), UpdateGeo, Strings.Format("dl.many", count), Strings.Get("dl.shelf"), seconds: 6,
+                     action: Strings.Get("shelf.title"), onAction: () => Expand("shelf"));
+            return;
+        }
+        bool risky = RiskyExt.Contains(System.IO.Path.GetExtension(name).ToLowerInvariant());
+        ShowPeek("download", Res("Lagoon"), UpdateGeo, ShortName(name),
+                 $"{Strings.Get("dl.done")} · {Bytes(size)} · {Strings.Get("dl.shelf")}", seconds: 6,
+                 action: Strings.Get(risky ? "shelf.reveal" : "shelf.open"),
+                 onAction: () => { if (path == null) return; if (risky) Reveal(path); else Open(path); });
+    }
+
+    void OnShotsSaved(List<string> files)
+    {
+        AddToShelf(files);
+        var last = files[^1];
+        ShotPeek(last, ShortName(System.IO.Path.GetFileName(last)));
+    }
+
+    void ShotPeek(string path, string sub) =>
+        ShowPeek("shot", Res("Lagoon"), ShotGeo, Strings.Get("shot.saved"), sub, seconds: 6,
+                 action: Strings.Get("shelf.open"), onAction: () => Open(path));
+
+    void ShelfShot_Click(object sender, RoutedEventArgs e) => TakeScreenshot();
+
+    // Снимок экрана под курсором: в «Снимки экрана», в буфер обмена и на полку.
+    // Сам остров в снимок не попадает: на миг просим Windows не показывать его при съёмке.
+    async void TakeScreenshot()
+    {
+        if (_shotBusy || _instant) return;
+        _shotBusy = true;
+        try
+        {
+            bool visible = IsVisible && _hwnd != IntPtr.Zero;
+            bool excluded = visible && Native.SetWindowDisplayAffinity(_hwnd, Native.WDA_EXCLUDEFROMCAPTURE);
+            bool faded = visible && !excluded;
+            if (faded) Opacity = 0;
+            if (visible) await Task.Delay(excluded ? 80 : 220); // дать Windows перерисовать экран без острова
+            BitmapSource image;
+            try { image = ScreenShot.Capture(); }
+            finally
+            {
+                if (excluded) Native.SetWindowDisplayAffinity(_hwnd, Native.WDA_NONE);
+                if (faded) Opacity = 1;
+            }
+            var path = ScreenShot.NewPath();
+            _shots?.Ignore(path); // папку снимков мы сами слушаем — не сообщать второй раз
+            ScreenShot.Save(image, path);
+            try { Clipboard.SetImage(image); }
+            catch (Exception ex) { App.Log(ex); } // буфер занят другой программой — снимок всё равно на полке
+            AddToShelf(new[] { path });
+            ShotPeek(path, Strings.Format("shot.copied", $"{image.PixelWidth}×{image.PixelHeight}"));
+        }
+        catch (Exception ex)
+        {
+            App.Log(ex);
+            ShowInfo(Strings.Get("shot.fail"));
+        }
+        finally { _shotBusy = false; }
+    }
+
+    // Длинное имя — с многоточием в середине, чтобы расширение осталось видно
+    static string ShortName(string name, int max = 22)
+    {
+        if (name.Length <= max) return name;
+        var ext = System.IO.Path.GetExtension(name);
+        if (ext.Length > 8) ext = "";
+        int head = max - ext.Length - 4;
+        return name[..head].TrimEnd() + "…" + name[(name.Length - ext.Length - 3)..];
+    }
+
+    static string Bytes(long n)
+    {
+        var c = Strings.Culture;
+        if (n < 1024) return Strings.Format("size.b", n);
+        if (n < 1024 * 1024) return Strings.Format("size.kb", (n / 1024.0).ToString(n < 10 * 1024 ? "0.#" : "0", c));
+        if (n < 1024L * 1024 * 1024) return Strings.Format("size.mb", (n / 1048576.0).ToString(n < 10 * 1048576L ? "0.#" : "0", c));
+        return Strings.Format("size.gb", (n / 1073741824.0).ToString("0.#", c));
     }
 }
 

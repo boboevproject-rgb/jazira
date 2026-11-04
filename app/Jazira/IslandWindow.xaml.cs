@@ -53,6 +53,7 @@ public partial class IslandWindow : Window
     static readonly Geometry MicGeo = G("M12 2.5a3.2 3.2 0 0 1 3.2 3.2v5.6a3.2 3.2 0 0 1-6.4 0V5.7A3.2 3.2 0 0 1 12 2.5z M5.5 11h1.8a4.7 4.7 0 0 0 9.4 0h1.8a6.5 6.5 0 0 1-5.6 6.4V21h-1.8v-3.6A6.5 6.5 0 0 1 5.5 11z");
     static readonly Geometry FishGeo = G("M2.5 12C5.4 7.6 10.4 6.1 14.4 8.1L20.5 4.6v14.8l-6.1-3.5C10.4 17.9 5.4 16.4 2.5 12z M6.6 10.9a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z");
     static readonly Geometry ShareGeo = G("M12 2.5l5 5-1.5 1.5-2.4-2.4V15h-2.2V6.6L8.5 9 7 7.5z M4.5 12.5h2.2v6.3h10.6v-6.3h2.2V21h-15z");
+    static readonly Geometry ShotGeo = G("M3 3h6v2.2H5.2V9H3z M15 3h6v6h-2.2V5.2H15z M3 15h2.2v3.8H9V21H3z M18.8 15H21v6h-6v-2.2h3.8z M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0z");
     static readonly Geometry UpdateGeo = G("M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4 3.3 3.3z M4 18.5h16v2H4z");
 
     readonly MediaService _media;
@@ -101,7 +102,8 @@ public partial class IslandWindow : Window
 
         _audio = new AudioWatch();
         _sys = new SystemWatch(Dispatcher);
-        SourceInitialized += (_, _) => MakeToolWindow();
+        WireFiles();
+        SourceInitialized += (_, _) => { MakeToolWindow(); StartHotKeys(); };
         Deactivated += (_, _) => { if (_typing) EndTyping(hide: false); }; // кликнули мимо — клавиатура снова ваша
         Loaded += (_, _) => { ApplyScale(); Place(); };
         DpiChanged += (_, _) => { if (!_dragging) Dispatcher.InvokeAsync(Place, DispatcherPriority.Background); };
@@ -121,6 +123,7 @@ public partial class IslandWindow : Window
         _tick.Start();
         _ = _media.StartAsync();
         ApplyFeatures();
+        new System.Windows.Interop.WindowInteropHelper(this).EnsureHandle(); // горячие клавиши работают, даже если остров скрыт
     }
 
     // ---- Покой, раскрытие, страницы ------------------------------------------------------------
@@ -144,6 +147,8 @@ public partial class IslandWindow : Window
             CheckPrayer(now);
             if (AppState.Current.LocalPage) _ = _local.RefreshAsync();
             if (_mode == Mode.Expanded && PageName == "local") RefreshLocal();
+            _downloads?.EnsureStarted(); // папки «Снимки экрана» могло не быть — вдруг появилась
+            _shots?.EnsureStarted();
         }
         CheckTasks(now);
         CheckTimers(now);

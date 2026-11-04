@@ -28,6 +28,8 @@ static class Native
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
     [DllImport("user32.dll")] public static extern IntPtr GetKeyboardLayout(uint threadId);
     [DllImport("user32.dll")] public static extern short GetKeyState(int key);
+    public const uint WDA_NONE = 0, WDA_EXCLUDEFROMCAPTURE = 0x11; // окно не попадает в снимки экрана (Windows 10 2004+)
+    [DllImport("user32.dll")] public static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint affinity);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(POINT pt, uint flags);
     [DllImport("shcore.dll")] static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
     // Масштаб экрана (1 = 100 %) монитора, на котором лежит точка в физических пикселях

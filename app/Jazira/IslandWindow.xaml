@@ -251,9 +251,14 @@
             </Grid.RowDefinitions>
             <Grid>
               <TextBlock x:Name="ShelfTitle" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
-              <Button x:Name="ShelfClear" Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" Click="ShelfClear_Click">
-                <TextBlock x:Name="ShelfClearText"/>
-              </Button>
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="ShelfShot" Style="{StaticResource LinkBtn}" Click="ShelfShot_Click">
+                  <TextBlock x:Name="ShelfShotText"/>
+                </Button>
+                <Button x:Name="ShelfClear" Style="{StaticResource LinkBtn}" Click="ShelfClear_Click">
+                  <TextBlock x:Name="ShelfClearText"/>
+                </Button>
+              </StackPanel>
             </Grid>
             <Grid Grid.Row="1" Margin="0,6,0,0">
               <Rectangle x:Name="ShelfZone" RadiusX="12" RadiusY="12" StrokeThickness="1.5" StrokeDashArray="4 3" Stroke="{DynamicResource Faint}"/>

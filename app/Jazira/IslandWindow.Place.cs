@@ -297,5 +297,6 @@ public partial class IslandWindow
         if (_sys != null) _sys.Enabled = st.Indicators;
         if (_audio != null) _audio.WatchVolume = st.Indicators;
         if (st.LocalPage && !_instant) _ = _local.RefreshAsync();
+        ApplyFileFeatures();
     }
 }

@@ -97,6 +97,8 @@ sealed class TrayIcon : IDisposable
         features.DropDownItems.Add(Item(Strings.Get("f.indicators"), () => Set(() => st.Indicators = !st.Indicators), st.Indicators));
         features.DropDownItems.Add(Item(Strings.Get("f.day"), () => Set(() => st.DayPage = !st.DayPage), st.DayPage));
         features.DropDownItems.Add(Item(Strings.Get("f.ramadan"), () => Set(() => st.Ramadan = !st.Ramadan), st.Ramadan));
+        features.DropDownItems.Add(Item(Strings.Get("f.downloads"), () => Set(() => st.DownloadsToShelf = !st.DownloadsToShelf), st.DownloadsToShelf));
+        features.DropDownItems.Add(Item(_island.ShotsMenuText(), () => Set(() => st.ShotsToShelf = !st.ShotsToShelf), st.ShotsToShelf));
         features.DropDownItems.Add(Item(Strings.Get("f.local"), () => Set(() => st.LocalPage = !st.LocalPage), st.LocalPage));
         features.DropDownItems.Add(Item(Strings.Get("f.prayer"), () => Set(() => st.Prayer = !st.Prayer), st.Prayer));
         menu.Items.Add(features);

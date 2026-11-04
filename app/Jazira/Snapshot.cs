@@ -71,7 +71,136 @@ static class Snapshot
         KoiSelfTest(sb);
         TaskParserSelfTest(sb);
         CalendarSelfTest(sb);
+        FolderWatchSelfTest(sb);
+        FolderWatchLiveTest(sb);
+        CaptureSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Скачанное: какие имена браузеры дают недокачанным файлам и когда файл считается готовым
+    static void FolderWatchSelfTest(System.Text.StringBuilder sb)
+    {
+        int fails = 0;
+        void Check(string name, object? got, object? want)
+        {
+            bool ok = Equals(got, want);
+            if (!ok) fails++;
+            sb.AppendLine($"files {(ok ? "ok  " : "FAIL")} {name}: {got} (want {want})");
+        }
+        Check("name pdf", FolderWatch.IsCandidate("договор.pdf"), true);
+        Check("name upper ext", FolderWatch.IsCandidate("Photo.JPG"), true);
+        Check("name chrome temp", FolderWatch.IsCandidate("договор.pdf.crdownload"), false);
+        Check("name chrome unconfirmed", FolderWatch.IsCandidate("Unconfirmed 123456.crdownload"), false);
+        Check("name firefox part", FolderWatch.IsCandidate("film.mkv.part"), false);
+        Check("name office lock", FolderWatch.IsCandidate("~$отчёт.docx"), false);
+        Check("name desktop.ini", FolderWatch.IsCandidate("desktop.ini"), false);
+
+        var dir = Path.Combine(Path.GetTempPath(), "jazira-selftest-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var now = DateTime.Now;
+            string F(string n, int bytes) { var p = Path.Combine(dir, n); File.WriteAllBytes(p, new byte[bytes]); return p; }
+            string Run(string path, int steps)
+            {
+                var p = new FolderWatch.Pending { Since = now };
+                var log = new System.Collections.Generic.List<string>();
+                var v = FolderWatch.Verdict.Wait;
+                for (int i = 0; i < steps && v == FolderWatch.Verdict.Wait; i++) { v = FolderWatch.Probe(path, p, now); log.Add(v.ToString()); }
+                return string.Join(">", log);
+            }
+            Check("ready when size is stable", Run(F("a.pdf", 10), 5), "Wait>Wait>Ready");
+            var b = F("b.zip", 0); F("b.zip.part", 100);
+            Check("firefox placeholder", Run(b, 5), "Drop");
+            var c = F("c.png", 10);
+            File.SetCreationTime(c, now.AddHours(-3)); File.SetLastWriteTime(c, now.AddHours(-3));
+            Check("old file moved in", Run(c, 5), "Drop");
+            Check("missing file", Run(Path.Combine(dir, "nope.pdf"), 5), "Drop");
+            Check("empty file waits", Run(F("d.txt", 0), 2), "Wait>Wait");
+            var e = F("e.bin", 10);
+            using (new FileStream(e, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                Check("locked file waits", Run(e, 4), "Wait>Wait>Wait>Wait");
+        }
+        finally { try { Directory.Delete(dir, true); } catch (Exception) { } }
+        sb.AppendLine($"files: {(fails == 0 ? "all ok" : fails + " FAILED")}");
+    }
+
+    // Настоящее слежение за папкой: как пишут файлы Chrome (Unconfirmed → .crdownload → имя) и Firefox
+    // (пустой файл с именем + .part, потом .part поверх), плюс старый файл, перенесённый в папку, и свой снимок
+    static void FolderWatchLiveTest(System.Text.StringBuilder sb)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "jazira-watch-" + Guid.NewGuid().ToString("N")[..8]);
+        var other = dir + "-other";
+        Directory.CreateDirectory(dir);
+        Directory.CreateDirectory(other);
+        var got = new System.Collections.Generic.List<string>();
+        try
+        {
+            using var w = new FolderWatch(System.Windows.Threading.Dispatcher.CurrentDispatcher, dir);
+            w.Arrived += files => got.AddRange(files.Select(f => Path.GetFileName(f)));
+            w.Enabled = true;
+            string P(string n) => Path.Combine(dir, n);
+
+            File.WriteAllBytes(P("Unconfirmed 4711.crdownload"), new byte[300]);
+            Pump(300);
+            File.Move(P("Unconfirmed 4711.crdownload"), P("chrome.pdf.crdownload"));
+            Pump(300);
+            File.Move(P("chrome.pdf.crdownload"), P("chrome.pdf"));
+
+            File.WriteAllBytes(P("firefox.zip"), Array.Empty<byte>());
+            File.WriteAllBytes(P("firefox.zip.part"), new byte[500]);
+            Pump(1800);
+            File.Move(P("firefox.zip.part"), P("firefox.zip"), true);
+
+            var old = Path.Combine(other, "old.jpg");
+            File.WriteAllBytes(old, new byte[50]);
+            File.SetCreationTime(old, DateTime.Now.AddDays(-3));
+            File.SetLastWriteTime(old, DateTime.Now.AddDays(-3));
+            File.Move(old, P("old.jpg"));
+
+            w.Ignore(P("own.png"));
+            File.WriteAllBytes(P("own.png.tmp"), new byte[40]);
+            File.Move(P("own.png.tmp"), P("own.png"));
+            Pump(5000);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); Directory.Delete(other, true); } catch (Exception) { }
+        }
+        got.Sort(StringComparer.Ordinal);
+        var result = string.Join(",", got);
+        sb.AppendLine($"watch {(result == "chrome.pdf,firefox.zip" ? "ok  " : "FAIL")} arrived: {result} (want chrome.pdf,firefox.zip)");
+    }
+
+    // Пока ждём — окна и таймеры живут (нужно FileSystemWatcher и таймеру проверки)
+    static void Pump(int ms)
+    {
+        var frame = new System.Windows.Threading.DispatcherFrame();
+        var t = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ms) };
+        t.Tick += (_, _) => { t.Stop(); frame.Continue = false; };
+        t.Start();
+        System.Windows.Threading.Dispatcher.PushFrame(frame);
+    }
+
+    // Снимок экрана — только в память (никуда не сохраняется) — и свободна ли Ctrl+PrtScn
+    static void CaptureSelfTest(System.Text.StringBuilder sb)
+    {
+        try
+        {
+            var img = ScreenShot.Capture();
+            var b = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position).Bounds;
+            bool ok = img.PixelWidth == b.Width && img.PixelHeight == b.Height;
+            sb.AppendLine($"shot {(ok ? "ok  " : "FAIL")} capture {img.PixelWidth}×{img.PixelHeight}, screen {b.Width}×{b.Height}");
+        }
+        catch (Exception ex) { sb.AppendLine($"shot FAIL capture: {ex.Message}"); }
+        var src = new System.Windows.Interop.HwndSource(new System.Windows.Interop.HwndSourceParameters("jazira-hotkey-probe"));
+        try
+        {
+            using var keys = new HotKeys(src.Handle);
+            bool free = keys.Set("probe", HotKeys.Ctrl, 0x2C, () => { });
+            sb.AppendLine($"hotkey Ctrl+PrtScn: {(free ? "free" : "taken by another app")}");
+        }
+        finally { src.Dispose(); }
     }
 
     // Календарь: разовые встречи в UTC и в чужом поясе, еженедельный повтор с исключением и переносом,
