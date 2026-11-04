@@ -120,17 +120,27 @@ Jazira читает календарь по секретной ссылке в �
 Скачанное, снимки экрана, задачи, таймеры и «Система» работают только на компьютере и в интернет
 ничего не отправляют.
 
-Нагрузка (замер на ноутбуке автора: Intel Iris Xe, 16 потоков, рыбка включена; процент — от одного ядра):
+Нагрузка в обычной работе (ноутбук автора: Intel Iris Xe, 16 потоков, рыбка включена, остров свёрнут;
+процент — от одного ядра):
 
-| Версия | Свёрнут | Раскрыт, пруд с рыбкой | Память (личная) |
+| Версия | Процессор | Память: выделено программе | Столбец «Память» в диспетчере задач |
 |---|---|---|---|
-| 0.3.0 (рисует процессор — так по умолчанию) | около 2,3 % | около 9 % | около 75 МБ |
-| 0.3.0 с ключом `--gpu-render` (рисует видеокарта) | около 2,6 % | около 10 % | около 215 МБ |
-| 0.2.0, после нескольких часов работы | около 2,6 % | — | около 300 МБ |
+| 0.3.0, через 6 минут после запуска | около 2,2 % | около 160 МБ | около 20 МБ |
+| 0.2.0, после нескольких часов работы | около 2,6 % | около 300 МБ | — |
 
-Остров маленький, поэтому с 0.3 его рисует процессор: видеокарте не нужно держать свои буферы,
-памяти уходит втрое меньше, а процессор занят даже чуть меньше. Если на вашем компьютере остров
-вдруг рисуется хуже, запустите `Jazira.exe --gpu-render` — будет по-старому.
+В первые минуты после запуска процессор занят сильнее (в первую минуту — до 30 % одного ядра):
+Jazira загружается, подтягивает тексты песен, погоду и курс. Через несколько минут — около 2 %.
+
+Остров маленький, поэтому с 0.3 его рисует процессор, а не видеокарта: ей не нужно держать свои
+буферы. В тестовом прогоне `--live-test` (без музыки и сети, после сборки мусора) это даёт:
+
+| Отрисовка | Свёрнут | Раскрыт, пруд с рыбкой | Память: выделено |
+|---|---|---|---|
+| процессор (так по умолчанию) | около 2,3 % | около 9 % | около 75 МБ |
+| видеокарта (`--gpu-render`) | около 2,6 % | около 10 % | около 215 МБ |
+
+Если на вашем компьютере остров вдруг рисуется хуже, запустите `Jazira.exe --gpu-render` — будет
+по-старому.
 
 Страница «Система» опрашивает память, сеть и датчики только пока открыта; первый запрос к датчикам
 нагрева после запуска занимает несколько секунд (так устроена Windows), дальше — сотые доли секунды.
@@ -322,6 +332,8 @@ a single self-contained `Jazira.exe`. `Jazira.exe --snapshot <dir>` renders ever
 `--live-test <dir>` checks hotkeys, capture exclusion, a real calendar, battery and heat next to your running
 island; `--video <dir> <ffmpeg.exe> <ru|en|tg>` renders the 25-second site video.
 
-**Footprint (0.3):** a 75 MB single exe (only the Russian .NET satellite resources are kept), about 75 MB of private memory and ~2% of one core while collapsed. The island is drawn
-by the CPU, which on the author's laptop uses three times less memory than the GPU path and slightly less CPU;
-`Jazira.exe --gpu-render` brings back GPU rendering.
+**Footprint (0.3):** a 75 MB single exe (only the Russian .NET satellite resources are kept). In normal use on the
+author's laptop, a few minutes after start: about 160 MB of private memory (0.2: about 300 MB; Task Manager's
+"Memory" column shows about 20 MB) and ~2% of one core while collapsed; the first minute after start is busier.
+The island is drawn by the CPU: in a bare `--live-test` run that is 75 MB instead of 215 MB on the GPU path, with
+slightly less CPU; `Jazira.exe --gpu-render` brings back GPU rendering.

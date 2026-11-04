@@ -38,7 +38,7 @@ ReleaseNotes: |-
   - "My day": tasks with reminders from plain text, several timers, the next meeting from a calendar link, Ramadan mode.
   - New downloads and screenshots land on the shelf; Ctrl+PrtScn takes a screenshot without the island.
   - A System page and a 10% battery warning; Ctrl+Alt+J opens the island.
-  - Drawn by the CPU: about 75 MB of memory instead of about 285 MB.
+  - Drawn by the CPU: about half the memory (about 160 MB instead of about 300 MB).
 ReleaseNotesUrl: https://github.com/boboevproject-rgb/jazira/releases/tag/v0.3.0
 ManifestType: defaultLocale
 ManifestVersion: 1.10.0
