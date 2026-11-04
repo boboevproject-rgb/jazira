@@ -8,7 +8,7 @@ namespace Jazira;
 
 public partial class App : Application
 {
-    public const string Version = "0.2.0";
+    public const string Version = "0.3.0";
     public const string Site = "https://boboevproject-rgb.github.io/jazira/";
     public const string CalendarHelp = "https://github.com/boboevproject-rgb/jazira/blob/main/app/README.md#calendar";
 
@@ -38,6 +38,20 @@ public partial class App : Application
             return;
         }
 
+        // Jazira.exe --live-test <папка>: живая проверка рядом с вашим островом (IslandWindow.Test.cs)
+        int live = Array.IndexOf(e.Args, "--live-test");
+        if (live >= 0)
+        {
+            AppState.ReadOnly = true;
+            AppState.Current.ShowIsland = true; // только в памяти
+            var dir = live + 1 < e.Args.Length ? e.Args[live + 1] : "live-test";
+            Directory.CreateDirectory(dir);
+            var test = new IslandWindow { TestOffscreen = true };
+            test.Show();
+            RunLiveTest(test, dir);
+            return;
+        }
+
         // Один остров на пользователя. Сразу после обновления старая копия ещё закрывается — подождём её.
         bool updated = Array.IndexOf(e.Args, "--updated") >= 0;
         _mutex = new Mutex(false, @"Local\Jazira.Island");
@@ -61,6 +75,13 @@ public partial class App : Application
             if (AppState.Current.AutoUpdate) CheckUpdates(manual: false);
         };
         _updateTimer.Start();
+    }
+
+    async void RunLiveTest(IslandWindow w, string dir)
+    {
+        try { await w.RunLiveTest(dir, 70); }
+        catch (Exception ex) { File.AppendAllText(Path.Combine(dir, "live-test.txt"), ex + Environment.NewLine); }
+        Shutdown();
     }
 
     public async void CheckUpdates(bool manual)

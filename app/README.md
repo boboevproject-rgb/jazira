@@ -1,11 +1,13 @@
 # Jazira для Windows — приложение
 
 Маленький «остров» у верхнего края экрана Windows 10 и 11. В покое на нём время, заряд, идущий таймер
-или строчка песни. Наведите курсор — остров раскроется, уберите — свернётся обратно. Версия **0.2.0**.
+или строчка песни. Наведите курсор (или нажмите Ctrl+Alt+J) — остров раскроется: музыка, «Мой день»
+с задачами и встречами, полка для файлов, фокус и таймеры, вода с рыбкой-кои, «Сегодня» и «Система».
+Уберите курсор — свернётся обратно. Версия **0.3.0**.
 
 [English below ↓](#english)
 
-## Что нового в 0.3 (готовится)
+## Что нового в 0.3
 
 - **Рыбка-питомец.** Кои растёт за каждый день, когда цель по воде выполнена. Серия дней без пропусков
   открывает окраски насовсем: 3 дня — трёхцветная санкэ, 7 — вторая рыбка в пруду, 14 — золотая огон.
@@ -115,12 +117,18 @@ Jazira читает календарь по секретной ссылке в �
 
 Настройки, журнал воды и полка хранятся только на компьютере: `%APPDATA%\Jazira\state.json`.
 
-Нагрузка (замер на ноутбуке автора, остров свёрнут):
+Скачанное, снимки экрана, задачи, таймеры и «Система» работают только на компьютере и в интернет
+ничего не отправляют.
 
-| Вариант | Процессор | Память |
+Нагрузка (замер на ноутбуке автора, 16 потоков, остров свёрнут, рыбка включена):
+
+| Версия | Процессор | Память (личная) |
 |---|---|---|
-| Пока вы работаете, рыбка включена | около 1,5 % одного ядра | около 285 МБ |
-| Рыбка выключена | около 0,9 % | около 230 МБ, как у 0.1 |
+| 0.3.0, через минуту после запуска | 0,2 % всего процессора — около 3 % одного ядра | около 210 МБ |
+| 0.2.0, после нескольких часов работы | 0,16 % — около 2,6 % одного ядра | около 300 МБ |
+
+Страница «Система» опрашивает память, сеть и датчики только пока открыта; первый запрос к датчикам
+нагрева после запуска занимает несколько секунд (так устроена Windows), дальше — сотые доли секунды.
 
 ## Установка
 
@@ -131,8 +139,8 @@ Jazira читает календарь по секретной ссылке в �
 3. Windows может предупредить «Защитник Windows предотвратил запуск» — приложение пока без цифровой
    подписи. Нажмите **Подробнее → Выполнить в любом случае**.
 
-Версия 0.1 обновлять себя не умеет, поэтому 0.2 ставится поверх неё тем же `install.bat`, настройки
-сохранятся. Дальше Jazira будет обновляться сама.
+Версия 0.1 обновлять себя не умеет, поэтому новую версию поверх неё ставят тем же `install.bat`,
+настройки сохранятся. С 0.2 Jazira обновляется сама: 0.2 сама предложит поставить 0.3.
 Удаление — `uninstall.bat` (настройки в `%APPDATA%\Jazira` сохраняются).
 
 ## Сборка из исходников
@@ -158,7 +166,7 @@ dotnet publish Jazira/Jazira.csproj -c Release -r win-x64 --self-contained true 
   Сумму можно и просто вписать в описание релиза. Без суммы приложение релиз пропустит.
 
 ```powershell
-$z = "Jazira-0.2.0-win-x64.zip"; "$((Get-FileHash $z -Algorithm SHA256).Hash.ToLower())  $z" | Set-Content "$z.sha256" -NoNewline
+$z = "Jazira-0.3.0-win-x64.zip"; "$((Get-FileHash $z -Algorithm SHA256).Hash.ToLower())  $z" | Set-Content "$z.sha256" -NoNewline
 ```
 
 ### Проверка без экрана
@@ -168,9 +176,22 @@ Jazira.exe --snapshot <папка>
 ```
 
 Рисует остров во всех состояниях в PNG с масштабом 200 % и выходит; на экране ничего не появляется,
-плеер не нужен. Это 63 картинки: русский и таджикский язык, все темы, вырез, полка, тексты, рыбка,
-страница «Сегодня», уведомления. Рядом кладёт `selftest.txt` с временем намаза для всех городов
-и проверкой разбора текста песни.
+плеер не нужен. Это 132 картинки: русский и таджикский язык, все темы, вырез, полка, тексты, рыбка
+и её карточка для сторис, «Мой день», календарь, Рамазан, таймеры, «Система», уведомления.
+Рядом кладёт `selftest.txt`: время намаза для всех городов, разбор текста песни, рыбка-питомец,
+время из текста задач, разбор календаря (повторы, часовые пояса, исключения), готовность скачанного
+файла — в том числе живая проверка во временной папке, — снимок экрана в память, свободны ли
+Ctrl+PrtScn и Ctrl+Alt+J, процессор, память и батарея этого компьютера.
+
+```bash
+Jazira.exe --live-test <папка>
+```
+
+Живая проверка рядом с уже запущенным островом: окно стоит за краем экрана, настройки не сохраняются,
+буфер обмена и ваши папки не трогаются. Проверяет горячие клавиши на настоящем окне, что остров
+не попадает в снимок экрана (на 0,4 с встаёт в правый нижний угол), настоящий календарь Google по
+публичной ссылке праздников, батарею и нагрев, а потом 70 секунд работает в покое — можно мерить
+процессор и память. Итог — в `live-test.txt`.
 
 ## Устройство
 
@@ -179,11 +200,23 @@ Jazira/App.xaml.cs               запуск, один экземпляр, ав
 Jazira/IslandWindow.xaml         вёрстка острова: покой, музыка, полка, фокус, вода, «Сегодня», уведомление
 Jazira/IslandWindow.xaml.cs      раскрытие по наведению, страницы, уведомления, данные
 Jazira/IslandWindow.Place.cs     место на экране, перетаскивание, монитор, масштаб, темы и подсветка
-Jazira/IslandWindow.Shelf.cs     полка для файлов: перетаскивание внутрь и наружу
+Jazira/IslandWindow.Shelf.cs     полка: перетаскивание, скачанное и снимки экрана, Ctrl+PrtScn
+Jazira/IslandWindow.Day.cs       «Мой день»: задачи, таймеры, встреча из календаря, Рамазан
+Jazira/IslandWindow.Sys.cs       «Система», батарея 10 %, Ctrl+Alt+J и управление с клавиатуры
+Jazira/IslandWindow.Test.cs      режим --live-test
 Jazira/IslandWindow.Live.cs      тексты, эквалайзер, индикаторы, «Сегодня», намаз, режим снимков
 Jazira/Theme.cs                  пять тем
 Jazira/Motion.cs                 пружинная анимация, цвет обложки
 Jazira/KoiPond.cs                рыбка-кои и пруд, нарисованные кодом
+Jazira/KoiPet.cs                 рыбка-питомец: рост, серия, окраски, вторая рыбка
+Jazira/KoiCard.cs                картинка «Моя кои» для сторис
+Jazira/DayModel.cs               задачи, таймеры, время из текста задачи
+Jazira/CalendarService.cs        календарь по iCal-ссылке: загрузка и разбор
+Jazira/FolderWatch.cs            слежение за «Загрузками» и «Снимками экрана»
+Jazira/ScreenShot.cs             снимок экрана
+Jazira/HotKeys.cs                глобальные горячие клавиши
+Jazira/SysMonitor.cs             процессор, память, сеть, нагрев, износ батареи
+Jazira/SoftShadow.cs             мягкая тень острова
 Jazira/MediaService.cs           что играет — системный медиа-пульт Windows
 Jazira/LyricsService.cs          тексты песен из LRCLIB
 Jazira/CoreAudio.cs              громкость и уровень звука (Core Audio)
@@ -202,8 +235,8 @@ install.bat, uninstall.bat       установка и удаление для �
 
 ## Дальше
 
-- Задачи с напоминаниями.
-- Установка через winget.
+- ИИ в острове: вопрос по горячей клавише и перевод выделенного текста (нужен ваш ключ).
+- Установка через winget и Microsoft Store.
 - Цифровая подпись.
 - Меньше размер файла и памяти.
 - Проверка таджикских текстов носителем языка.
@@ -215,6 +248,18 @@ install.bat, uninstall.bat       установка и удаление для �
 ## English
 
 A small island at the top of the Windows 10/11 screen.
+
+**New in 0.3:**
+- a koi pet that grows on days you hit your water goal; streaks unlock colours and a second fish,
+  and a one-click "My koi — N days" story picture;
+- a "My day" page: tasks with reminders parsed from plain text ("call mom at 18:30"), several timers
+  at once, the next meeting from a Google or Outlook secret iCal link with a Join button, and a Ramadan
+  mode with iftar and suhoor countdowns;
+- new downloads and screenshots land on the shelf by themselves; Ctrl+PrtScn takes a screenshot of the
+  screen under the cursor (the island itself is left out);
+- a "System" page: CPU with a one-minute graph, memory, thermal throttling, network speed and battery
+  wear, all without admin rights or drivers; a 10% battery warning;
+- Ctrl+Alt+J opens the island; arrows switch pages, Esc closes and gives the keyboard back.
 
 **New in 0.2:**
 - five themes and a capsule or edge-notch shape;
@@ -241,13 +286,14 @@ A small island at the top of the Windows 10/11 screen.
 - lrclib.net (song title, artist and duration);
 - open-meteo.com (city coordinates);
 - nbt.tj (date);
-- GitHub (updates).
+- GitHub (updates);
+- your calendar host, only if you connect a calendar link.
 
 No accounts or keys. Settings stay in `%APPDATA%\Jazira`.
 
 **Install:** download `Jazira-<version>-win-x64.zip` from the [releases page](https://github.com/boboevproject-rgb/jazira/releases), unzip it and run `install.bat` (no admin rights). The app is not code-signed yet, so
-SmartScreen may warn you: *More info → Run anyway*. 0.1 cannot update itself, so install 0.2 over it the
-same way. From 0.2 on, Jazira updates itself.
+SmartScreen may warn you: *More info → Run anyway*. 0.1 cannot update itself, so install the new version over it
+the same way. From 0.2 on, Jazira updates itself (0.2 offers 0.3 on its own).
 
 **Releases for auto-update:**
 - tag `vX.Y.Z`;

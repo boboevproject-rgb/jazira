@@ -73,7 +73,8 @@ public partial class IslandWindow
 
         string heat, heatSub;
         Brush? heatBrush = null;
-        if (!m.HeatKnown) { heat = "—"; heatSub = Strings.Get("sys.noHeat"); }
+        if (!m.HeatLoaded) { heat = "…"; heatSub = ""; }
+        else if (!m.HeatKnown) { heat = "—"; heatSub = Strings.Get("sys.noHeat"); }
         else
         {
             heat = m.TempC is double t ? $"{Math.Round(t)}°" : Strings.Get(m.Throttling ? "sys.heatHot" : "sys.heatOk");

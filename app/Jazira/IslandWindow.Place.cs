@@ -49,6 +49,11 @@ public partial class IslandWindow
     void Place()
     {
         if (_hwnd == IntPtr.Zero || _dragging) return;
+        if (TestOffscreen)
+        {
+            Native.SetWindowPos(_hwnd, IntPtr.Zero, -4000, -4000, 0, 0, Native.SWP_NOSIZE | Native.SWP_NOZORDER | Native.SWP_NOACTIVATE);
+            return;
+        }
         var st = AppState.Current;
         var wa = TargetScreen().WorkingArea;
         double k = Native.ScaleAt(wa.Left + wa.Width / 2, wa.Top + wa.Height / 2);

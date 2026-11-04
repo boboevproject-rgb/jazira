@@ -31,6 +31,7 @@ sealed class SysMonitor
     public ulong MemUsed { get; private set; }
     public double? DownBps { get; private set; }
     public double? UpBps { get; private set; }
+    public bool HeatLoaded { get; private set; }          // первый ответ уже пришёл (первый запрос к WMI — секунды)
     public bool HeatKnown { get; private set; }           // Windows вообще сообщает о нагреве
     public double? TempC { get; private set; }            // только если датчик похож на настоящий
     public bool Throttling { get; private set; }          // процессор сбавляет частоту из-за нагрева
@@ -121,6 +122,7 @@ sealed class SysMonitor
         }).ContinueWith(t =>
         {
             _heatBusy = false;
+            HeatLoaded = true;
             var (known, max, limit) = t.Result;
             HeatKnown = known;
             Throttling = known && limit < 100;
@@ -152,7 +154,7 @@ sealed class SysMonitor
         Cpu = cpu;
         MemTotal = total; MemUsed = (ulong)(total * mem); MemLoad = mem;
         DownBps = down; UpBps = up;
-        HeatKnown = true; TempC = temp; Throttling = throttling;
+        HeatLoaded = HeatKnown = true; TempC = temp; Throttling = throttling;
         Battery = battery;
     }
 
