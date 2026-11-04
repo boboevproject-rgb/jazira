@@ -19,6 +19,11 @@
     <Company>Bilol</Company>
     <Copyright>© 2026 Bilol · MIT</Copyright>
     <Description>Jazira — маленький остров наверху экрана Windows</Description>
+    <!-- Лёгкая сборка: из языковых пакетов .NET (сообщения об ошибках самой платформы) берём только
+         русский, остальные не нужны (однофайловая сборка 81 → 75,5 МБ) — тексты приложения живут в Strings.cs.
+         Обрезку (PublishTrimmed) не включаем: WPF её не поддерживает, а обработанные ILLink сборки
+         .NET теряют заранее скомпилированный код — запуск медленнее, памяти больше. -->
+    <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

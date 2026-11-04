@@ -156,7 +156,8 @@ Jazira читает календарь по секретной ссылке в �
 dotnet build Jazira/Jazira.csproj -c Release
 ```
 
-Один самодостаточный `Jazira.exe` (работает без установленного .NET):
+Один самодостаточный `Jazira.exe` на 75 МБ (работает без установленного .NET; из языковых пакетов
+самой платформы берётся только русский, поэтому файл на 5,5 МБ легче, чем в 0.2):
 
 ```bash
 dotnet publish Jazira/Jazira.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
@@ -318,6 +319,6 @@ a single self-contained `Jazira.exe`. `Jazira.exe --snapshot <dir>` renders ever
 `--live-test <dir>` checks hotkeys, capture exclusion, a real calendar, battery and heat next to your running
 island; `--video <dir> <ffmpeg.exe> <ru|en|tg>` renders the 25-second site video.
 
-**Footprint (0.3):** about 75 MB of private memory and ~2% of one core while collapsed. The island is drawn
+**Footprint (0.3):** a 75 MB single exe (only the Russian .NET satellite resources are kept), about 75 MB of private memory and ~2% of one core while collapsed. The island is drawn
 by the CPU, which on the author's laptop uses three times less memory than the GPU path and slightly less CPU;
 `Jazira.exe --gpu-render` brings back GPU rendering.
