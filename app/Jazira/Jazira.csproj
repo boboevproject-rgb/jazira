@@ -14,7 +14,7 @@
     <RootNamespace>Jazira</RootNamespace>
     <ApplicationIcon>..\..\assets\icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.3.0</Version>
+    <Version>0.3.1</Version>
     <Product>Jazira</Product>
     <Company>Bilol</Company>
     <Copyright>© 2026 Bilol · MIT</Copyright>

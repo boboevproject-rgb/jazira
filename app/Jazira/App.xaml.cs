@@ -8,7 +8,7 @@ namespace Jazira;
 
 public partial class App : Application
 {
-    public const string Version = "0.3.0";
+    public const string Version = "0.3.1";
     public const string Site = "https://boboevproject-rgb.github.io/jazira/";
     public const string CalendarHelp = "https://github.com/boboevproject-rgb/jazira/blob/main/app/README.md#calendar";
 

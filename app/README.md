@@ -3,13 +3,13 @@
 Маленький «остров» у верхнего края экрана Windows 10 и 11. В покое на нём время, заряд, идущий таймер
 или строчка песни. Наведите курсор (или нажмите Ctrl+Alt+J) — остров раскроется: музыка, «Мой день»
 с задачами и встречами, полка для файлов, фокус и таймеры, вода с рыбкой-кои, «Сегодня» и «Система».
-Уберите курсор — свернётся обратно. Версия **0.3.0**.
+Уберите курсор — свернётся обратно. Версия **0.3.1**.
 
 [English below ↓](#english)
 
-## В следующей версии (уже в коде, в релиз ещё не вошло)
+## Что нового в 0.3.1
 
-- **Автоскрытие.** Меню «Место» → «Прятать — показывать при наведении». Убрали курсор — через секунду
+- **Автоскрытие.** Меню «Расположение» → «Прятать — показывать при наведении». Убрали курсор — через секунду
   остров уезжает за верхний край, остаётся тонкая полоска; свободно стоящий остров тает на месте.
   Подведите курсор к полоске — остров выезжает, дальше всё как обычно. Уведомления, Ctrl+Alt+J
   и файл, который тащат к полоске, показывают его сами. Пока остров спрятан, мышь проходит сквозь него:
@@ -164,7 +164,7 @@ Jazira загружается, подтягивает тексты песен, �
    подписи. Нажмите **Подробнее → Выполнить в любом случае**.
 
 Версия 0.1 обновлять себя не умеет, поэтому новую версию поверх неё ставят тем же `install.bat`,
-настройки сохранятся. С 0.2 Jazira обновляется сама: 0.2 сама предложит поставить 0.3.
+настройки сохранятся. С 0.2 Jazira обновляется сама: 0.2 и 0.3.0 сами предложат поставить 0.3.1.
 Удаление — `uninstall.bat` (настройки в `%APPDATA%\Jazira` сохраняются).
 
 Когда пакет примут в каталог winget, Jazira можно будет поставить командой `winget install Bilol.Jazira`
@@ -195,7 +195,7 @@ dotnet publish Jazira/Jazira.csproj -c Release -r win-x64 --self-contained true 
   Сумму можно и просто вписать в описание релиза. Без суммы приложение релиз пропустит.
 
 ```powershell
-$z = "Jazira-0.3.0-win-x64.zip"; "$((Get-FileHash $z -Algorithm SHA256).Hash.ToLower())  $z" | Set-Content "$z.sha256" -NoNewline
+$z = "Jazira-0.3.1-win-x64.zip"; "$((Get-FileHash $z -Algorithm SHA256).Hash.ToLower())  $z" | Set-Content "$z.sha256" -NoNewline
 ```
 
 ### Проверка без экрана
@@ -277,7 +277,7 @@ install.bat, uninstall.bat       установка и удаление для �
 ## Дальше
 
 - ИИ в острове: вопрос по горячей клавише и перевод выделенного текста (нужен ваш ключ).
-- winget: манифест готов и проходит проверку (`winget/`), подаётся после релиза 0.3.0.
+- winget: манифест 0.3.1 готов и проходит проверку (`winget/`), в каталог ещё не подан.
 - Microsoft Store и цифровая подпись.
 - Проверка таджикских текстов носителем языка.
 
@@ -289,7 +289,7 @@ install.bat, uninstall.bat       установка и удаление для �
 
 A small island at the top of the Windows 10/11 screen.
 
-**Next version (in the code, not released yet):** auto-hide (Place → "Auto-hide — show on hover").
+**New in 0.3.1:** auto-hide (Position → "Auto-hide — show on hover").
 When the cursor leaves, the island slides up behind the top edge and leaves a thin strip (a floating
 island fades in place); point at the strip and it slides back. Notifications, Ctrl+Alt+J and a file
 dragged to the strip bring it back too. While hidden, clicks go straight through to the windows below,
@@ -339,7 +339,7 @@ No accounts or keys. Settings stay in `%APPDATA%\Jazira`.
 
 **Install:** download `Jazira-<version>-win-x64.zip` from the [releases page](https://github.com/boboevproject-rgb/jazira/releases), unzip it and run `install.bat` (no admin rights). The app is not code-signed yet, so
 SmartScreen may warn you: *More info → Run anyway*. 0.1 cannot update itself, so install the new version over it
-the same way. From 0.2 on, Jazira updates itself (0.2 offers 0.3 on its own).
+the same way. From 0.2 on, Jazira updates itself (0.2 and 0.3.0 offer 0.3.1 on their own).
 
 **Releases for auto-update:**
 - tag `vX.Y.Z`;
