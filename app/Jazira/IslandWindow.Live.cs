@@ -291,6 +291,8 @@ public partial class IslandWindow
             st.Koi = true; st.Lyrics = true; st.Indicators = true; st.LocalPage = true; st.Prayer = false;
             st.City = "dushanbe"; st.WaterGoalMl = 2000;
             st.Shelf = new List<string>();
+            st.DayPage = true; st.Tasks = new List<TaskItem>(); st.Timers = new List<TimerItem>();
+            TaskInput.Clear(); TaskInputRow.Visibility = Visibility.Collapsed;
             st.LastDrink = DateTime.Now.AddMinutes(-30);
             st.WaterLog[AppState.Today] = 750; // без сохранения на диск
             FakePet(9, 4, false, 2);
@@ -313,6 +315,30 @@ public partial class IslandWindow
         void Lyrics() { _lyrics.Fake(lines); _lyricIndex = 1; }
         void Water(int ml, double hoursAgo) { st.WaterLog[AppState.Today] = ml; st.LastDrink = DateTime.Now.AddHours(-hoursAgo); }
         void Pet(int age, int streak, bool today, int gap = 2) => FakePet(age, streak, today, gap);
+        void Tasks(string lang, int extra = 0)
+        {
+            var now = DateTime.Now;
+            bool tg = lang == "tg";
+            st.Tasks = new List<TaskItem>
+            {
+                new() { Text = tg ? "Ба модар занг задан" : "Позвонить маме", Due = now.Date.AddHours(now.Hour + 2).AddMinutes(30) },
+                new() { Text = tg ? "Пардохти интернет" : "Оплатить интернет", Due = now.AddMinutes(-25), Reminded = true },
+                new() { Text = tg ? "Нон харидан" : "Купить хлеб" },
+                new() { Text = tg ? "Вохӯрӣ дар бонк" : "Встреча в банке", Due = now.Date.AddDays(1).AddHours(10) },
+                new() { Text = tg ? "Ҳисобот фиристодан" : "Отправить отчёт", Done = true, DoneAt = now.AddHours(-1) },
+            };
+            for (int i = 0; i < extra; i++) st.Tasks.Add(new() { Text = (tg ? "Вазифа " : "Задача ") + (i + 1) });
+        }
+        void Timers()
+        {
+            var now = DateTime.Now;
+            st.Timers = new List<TimerItem>
+            {
+                new() { Minutes = 10, Ends = now.AddSeconds(4 * 60 + 12) },
+                new() { Minutes = 30, Ends = now.AddMinutes(27) },
+                new() { Minutes = 5, Ends = now.AddSeconds(-20), Done = true },
+            };
+        }
 
         foreach (var lang in new[] { "ru", "tg" })
         {
@@ -324,6 +350,15 @@ public partial class IslandWindow
             yield return ($"{lang}-music", () => { Base(lang); Track(true); Expand("music"); });
             yield return ($"{lang}-music-lyrics", () => { Base(lang); Track(true); Lyrics(); Expand("music"); });
             yield return ($"{lang}-music-empty", () => { Base(lang); Expand("music"); });
+            yield return ($"{lang}-day", () => { Base(lang); Tasks(lang); Expand("day"); });
+            yield return ($"{lang}-day-empty", () => { Base(lang); Expand("day"); });
+            yield return ($"{lang}-day-many", () => { Base(lang); Tasks(lang, 3); Expand("day"); });
+            yield return ($"{lang}-day-typing", () => { Base(lang); Tasks(lang); TaskInputRow.Visibility = Visibility.Visible; TaskInput.Text = lang == "tg" ? "чой баъди 20 дақ" : "чай через 20 мин"; Expand("day"); });
+            yield return ($"{lang}-day-typing-empty", () => { Base(lang); TaskInputRow.Visibility = Visibility.Visible; Expand("day"); });
+            yield return ($"{lang}-focus-timers", () => { Base(lang); Timers(); Expand("focus"); });
+            yield return ($"{lang}-idle-timer", () => { Base(lang); Timers(); Collapse(); });
+            yield return ($"{lang}-peek-task", () => { Base(lang); Collapse(); Alert("task", Res("Violet"), TaskGeo, lang == "tg" ? "Ба модар занг задан" : "Позвонить маме", Strings.Format("task.remind", "18:30"), 15, Strings.Get("task.done"), () => { }); });
+            yield return ($"{lang}-peek-timer", () => { Base(lang); Collapse(); Alert("timer", Res("Amber"), WatchGeo, Strings.Format("timer.done", Strings.Format("timer.min", 10)), "", 10); });
             yield return ($"{lang}-shelf", () => { Base(lang); st.Shelf = new List<string>(shelf); Expand("shelf"); });
             yield return ($"{lang}-shelf-empty", () => { Base(lang); Expand("shelf"); });
             yield return ($"{lang}-shelf-drop", () => { Base(lang); _dropHover = true; Expand("shelf"); });

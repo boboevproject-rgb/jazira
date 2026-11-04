@@ -20,7 +20,7 @@ namespace Jazira;
 public partial class IslandWindow : Window
 {
     enum Mode { Idle, Expanded, Peek }
-    static readonly string[] AllPages = { "music", "shelf", "focus", "water", "local" };
+    static readonly string[] AllPages = { "music", "day", "shelf", "focus", "water", "local" };
     static readonly Size IdleBase = new(196, 34);
 
     static Geometry G(string d) { var g = Geometry.Parse(d); g.Freeze(); return g; }
@@ -102,6 +102,7 @@ public partial class IslandWindow : Window
         _audio = new AudioWatch();
         _sys = new SystemWatch(Dispatcher);
         SourceInitialized += (_, _) => MakeToolWindow();
+        Deactivated += (_, _) => { if (_typing) EndTyping(hide: false); }; // кликнули мимо — клавиатура снова ваша
         Loaded += (_, _) => { ApplyScale(); Place(); };
         DpiChanged += (_, _) => { if (!_dragging) Dispatcher.InvokeAsync(Place, DispatcherPriority.Background); };
         SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(Place);
@@ -109,7 +110,7 @@ public partial class IslandWindow : Window
         _hoverOut.Tick += (_, _) =>
         {
             _hoverOut.Stop();
-            if (_mode != Mode.Expanded || _pressed || _dragOut) return;
+            if (_mode != Mode.Expanded || _pressed || _dragOut || _typing) return; // печатаете задачу — не сворачиваемся
             if (CursorOverIsland()) { _hoverOut.Start(); return; } // курсор ещё над островом (например, после перетаскивания файла)
             Collapse();
         };
@@ -124,7 +125,7 @@ public partial class IslandWindow : Window
 
     // ---- Покой, раскрытие, страницы ------------------------------------------------------------
 
-    string[] Pages => AppState.Current.LocalPage ? AllPages : AllPages.Where(p => p != "local").ToArray();
+    string[] Pages => AllPages.Where(p => (p != "local" || AppState.Current.LocalPage) && (p != "day" || AppState.Current.DayPage)).ToArray();
     string PageName => Pages[Math.Clamp(_page, 0, Pages.Length - 1)];
     bool HasTrack => _media.HasSession && _media.Title.Length > 0;
 
@@ -139,10 +140,13 @@ public partial class IslandWindow : Window
             _power.Read();
             RefreshWater(); // новый день — счётчик с нуля; и вода в пруду рыбки понемногу мелеет
             CheckWaterReminder(now);
+            if (_mode == Mode.Expanded && PageName == "day" && !_typing) RefreshDay(); // время задач «краснеет» вовремя
             CheckPrayer(now);
             if (AppState.Current.LocalPage) _ = _local.RefreshAsync();
             if (_mode == Mode.Expanded && PageName == "local") RefreshLocal();
         }
+        CheckTasks(now);
+        CheckTimers(now);
         RefreshIdleRight();
         if (_mode == Mode.Expanded)
         {
@@ -207,6 +211,7 @@ public partial class IslandWindow : Window
     FrameworkElement PanelOf(string page) => page switch
     {
         "music" => MusicPanel,
+        "day" => DayPanel,
         "shelf" => ShelfPanel,
         "focus" => FocusPanel,
         "water" => WaterPanel,
@@ -217,6 +222,8 @@ public partial class IslandWindow : Window
     {
         "music" => !HasTrack ? new Size(420, 96) : LyricBlock.Visibility == Visibility.Visible ? new Size(420, 194) : new Size(420, 150),
         "shelf" => new Size(420, 122),
+        "day" => DaySize(),
+        "focus" => new Size(420, 150),
         "water" => new Size(440, 118),
         "local" => new Size(AppState.Current.Prayer ? 460 : 400, 112),
         _ => new Size(420, 112),
@@ -224,6 +231,7 @@ public partial class IslandWindow : Window
 
     void Collapse()
     {
+        if (_typing) EndTyping(hide: false);
         _mode = Mode.Idle;
         _peekKind = "";
         _peekAction = null;
@@ -268,7 +276,7 @@ public partial class IslandWindow : Window
 
     void ShowPanel(FrameworkElement target)
     {
-        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, ShelfPanel, FocusPanel, WaterPanel, LocalPanel, PeekPanel })
+        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, DayPanel, ShelfPanel, FocusPanel, WaterPanel, LocalPanel, PeekPanel })
         {
             if (p == target) continue;
             p.BeginAnimation(OpacityProperty, null);
@@ -371,8 +379,10 @@ public partial class IslandWindow : Window
     {
         RefreshIdle();
         RefreshMusic();
+        RefreshDay();
         RefreshShelf();
         RefreshFocus();
+        RefreshTimers();
         RefreshWater();
         RefreshLocal();
     }
@@ -416,7 +426,14 @@ public partial class IslandWindow : Window
     // Справа в покое: идущий таймер важнее заряда
     void RefreshIdleRight()
     {
-        if (_focus.Running)
+        var timer = SoonestTimer();
+        if (timer is TimeSpan t && (!_focus.Running || t < _focus.Left))
+        {
+            IdleRight.Text = Fmt(t);
+            IdleRight.Foreground = Res("Amber");
+            IdleBolt.Visibility = Visibility.Collapsed;
+        }
+        else if (_focus.Running)
         {
             IdleRight.Text = Fmt(_focus.Left);
             IdleRight.Foreground = Res(_focus.IsBreak ? "Lagoon" : "Coral");

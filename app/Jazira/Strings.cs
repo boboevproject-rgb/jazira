@@ -54,6 +54,17 @@ static class Strings
         ["card.streak"] = new[] { "{0} подряд", "{0} in a row", "{0} пай дар пай" },
         ["card.grow"] = new[] { "Растёт с каждым днём, когда я пью норму воды", "It grows every day I drink enough water", "Ҳар рӯзе, ки меъёри обро менӯшам, калон мешавад" },
         ["card.app"] = new[] { "Jazira — остров для Windows", "Jazira — an island for Windows", "Jazira — ҷазира барои Windows" },
+        ["day.title"] = new[] { "Мой день", "My day", "Рӯзи ман" },
+        ["day.add"] = new[] { "+ Задача", "+ Task", "+ Вазифа" },
+        ["day.empty"] = new[] { "Задач нет. Например: «позвонить маме в 18:30»", "No tasks yet. Try “call mom at 18:30”", "Вазифа нест. Масалан: «ба модар занг соати 18:30»" },
+        ["day.hint"] = new[] { "Задача… можно «в 18:30» или «через 20 мин»", "Task… add “at 18:30” or “in 20 min”", "Вазифа… «соати 18:30» ё «баъди 20 дақ»" },
+        ["day.more"] = new[] { "и ещё {0}", "{0} more", "боз {0}" },
+        ["day.tomorrow"] = new[] { "завтра", "tomorrow", "фардо" },
+        ["task.remind"] = new[] { "Напоминание · {0}", "Reminder · {0}", "Хотиррасон · {0}" },
+        ["task.done"] = new[] { "Готово", "Done", "Тайёр" },
+        ["timer.label"] = new[] { "Таймер", "Timer", "Таймер" },
+        ["timer.min"] = new[] { "{0} мин", "{0} min", "{0} дақ" },
+        ["timer.done"] = new[] { "Таймер {0} — время вышло", "{0} timer is up", "Таймери {0} — вақт тамом" },
         ["ml"] = new[] { "мл", "ml", "мл" },
         ["l"] = new[] { "л", "L", "л" },
         ["charge.on"] = new[] { "Зарядка подключена", "Charger connected", "Барқгир пайваст шуд" },
@@ -129,7 +140,8 @@ static class Strings
         ["f.lyrics"] = new[] { "Тексты песен (lrclib.net)", "Song lyrics (lrclib.net)", "Матни сурудҳо (lrclib.net)" },
         ["f.koi"] = new[] { "Рыбка-кои", "Koi fish", "Моҳии кои" },
         ["f.indicators"] = new[] { "Индикаторы: громкость, раскладка, камера", "Indicators: volume, keyboard, camera", "Нишондиҳандаҳо: овоз, забон, камера" },
-        ["f.local"] = new[] { "Страница «Сегодня»: погода и курс", "“Today” page: weather and rates", "Саҳифаи «Имрӯз»: обу ҳаво ва қурб" },
+        ["f.day"] = new[] { "Страница «Мой день»: задачи и напоминания", "“My day” page: tasks and reminders", "Саҳифаи «Рӯзи ман»: вазифаҳо ва хотиррасонҳо" },
+        ["f.local"] =new[] { "Страница «Сегодня»: погода и курс", "“Today” page: weather and rates", "Саҳифаи «Имрӯз»: обу ҳаво ва қурб" },
         ["f.prayer"] = new[] { "Время намаза (расчёт, сверяйте с мечетью)", "Prayer times (calculated, check your mosque)", "Вақти намоз (ҳисобӣ, бо масҷид муқоиса кунед)" },
         ["tray.city"] = new[] { "Город", "City", "Шаҳр" },
         ["tray.autoupdate"] = new[] { "Обновлять автоматически", "Update automatically", "Худкор навсозӣ шавад" },
@@ -164,6 +176,17 @@ static class Strings
 
     // Числа: «1 250» по-русски и по-таджикски, «1,250» по-английски
     public static CultureInfo Culture => CultureInfo.GetCultureInfo(Lang == "en" ? "en-US" : "ru-RU");
+
+    // Даты словами: «ср, 4 ноября», «Wed, 4 November», по-таджикски — если Windows знает таджикский
+    public static CultureInfo DateCulture
+    {
+        get
+        {
+            if (Lang == "tg")
+                try { return CultureInfo.GetCultureInfo("tg-Cyrl-TJ"); } catch (CultureNotFoundException) { }
+            return Lang == "en" ? CultureInfo.GetCultureInfo("en-GB") : CultureInfo.GetCultureInfo("ru-RU");
+        }
+    }
 
     public static string Detect()
     {

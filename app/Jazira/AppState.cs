@@ -37,6 +37,9 @@ public sealed class AppState
     public string City { get; set; } = "dushanbe";
     public bool AutoUpdate { get; set; } = true;
     public List<string> Shelf { get; set; } = new();
+    public bool DayPage { get; set; } = true;
+    public List<TaskItem> Tasks { get; set; } = new();
+    public List<TimerItem> Timers { get; set; } = new();
 
     // Рыбка-питомец: дни, когда цель по воде выполнена. По ним кои растёт, а самая длинная серия
     // открывает окраски и вторую рыбку — насовсем, даже если потом серия прервалась (KoiPet.cs)

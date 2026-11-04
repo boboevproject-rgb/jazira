@@ -69,7 +69,35 @@ static class Snapshot
         var lines = LyricsService.Parse("[00:35.66]Look at the stars\n[00:38.46]Look how they shine\n[01:02.5][01:40.00]Twice\n[00:40.36]");
         sb.AppendLine($"lyrics: {lines?.Length} lines, first {lines?[0].At} '{lines?[0].Text}', last {lines?[^1].At} '{lines?[^1].Text}'");
         KoiSelfTest(sb);
+        TaskParserSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Время из текста задачи: «в 18:30», «через 20 мин», «завтра», по-английски и по-таджикски
+    static void TaskParserSelfTest(System.Text.StringBuilder sb)
+    {
+        var now = new DateTime(2026, 11, 4, 10, 0, 0);
+        int fails = 0;
+        foreach (var (input, text, due) in new (string, string, DateTime?)[]
+        {
+            ("позвонить маме в 18:30", "позвонить маме", now.Date.AddHours(18.5)),
+            ("чай через 20 мин", "чай", now.AddMinutes(20)),
+            ("через 1 час созвон", "созвон", now.AddHours(1)),
+            ("завтра отчёт", "отчёт", now.Date.AddDays(1).AddHours(9)),
+            ("купить хлеб", "купить хлеб", null),
+            ("call mom at 9:15", "call mom", now.Date.AddDays(1).AddHours(9.25)),
+            ("in 2 h stretch", "stretch", now.AddHours(2)),
+            ("фардо соати 8:00 бозор", "бозор", now.Date.AddDays(1).AddHours(8)),
+            ("баъди 15 дақ нон", "нон", now.AddMinutes(15)),
+            ("встреча завтра в 14.00, взять паспорт", "встреча, взять паспорт", now.Date.AddDays(1).AddHours(14)),
+        })
+        {
+            var (t, d) = TaskParser.Parse(input, now);
+            bool ok = t == text && d == due;
+            if (!ok) fails++;
+            sb.AppendLine($"task {(ok ? "ok  " : "FAIL")} '{input}' -> '{t}' {d:yyyy-MM-dd HH:mm} (want '{text}' {due:yyyy-MM-dd HH:mm})");
+        }
+        sb.AppendLine($"tasks: {(fails == 0 ? "all ok" : fails + " FAILED")}");
     }
 
     // Питомец: серия, грусть, открытия и учёт сегодняшнего дня — на выдуманных историях

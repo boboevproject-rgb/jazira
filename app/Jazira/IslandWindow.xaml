@@ -97,6 +97,33 @@
       </Setter>
     </Style>
 
+    <!-- Маленькая таблетка: пресеты и идущие таймеры -->
+    <Style x:Key="MiniPill" TargetType="Button">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="Margin" Value="0,0,6,0"/>
+      <Setter Property="Foreground" Value="{DynamicResource Fg}"/>
+      <Setter Property="Background" Value="{DynamicResource Chip}"/>
+      <Setter Property="FontSize" Value="11.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+              <ContentPresenter VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bg" Property="Opacity" Value="0.8"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
     <!-- Текстовая кнопка без фона («Очистить») -->
     <Style x:Key="LinkBtn" TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
@@ -237,7 +264,12 @@
           </Grid>
 
           <!-- ===== Фокус ===== -->
-          <Grid x:Name="FocusPanel" Margin="36,0" Visibility="Collapsed" Opacity="0">
+          <Grid x:Name="FocusPanel" Margin="36,12,36,12" Visibility="Collapsed" Opacity="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+          <Grid VerticalAlignment="Center">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
@@ -271,6 +303,38 @@
                 </Button>
               </StackPanel>
             </StackPanel>
+          </Grid>
+            <!-- Кухонные таймеры: идущие слева, пресеты справа -->
+            <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="False">
+              <StackPanel x:Name="TimerPresets" DockPanel.Dock="Right" Orientation="Horizontal"/>
+              <TextBlock x:Name="TimerLabel" DockPanel.Dock="Left" FontSize="11.5" Foreground="{DynamicResource Faint}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <StackPanel x:Name="TimerChips" DockPanel.Dock="Left" Orientation="Horizontal"/>
+            </DockPanel>
+          </Grid>
+
+          <!-- ===== Мой день: ближайшая встреча, задачи с напоминаниями ===== -->
+          <Grid x:Name="DayPanel" Margin="34,12,34,12" Visibility="Collapsed" Opacity="0" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <TextBlock x:Name="DayTitle" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <Button x:Name="TaskAddBtn" Style="{StaticResource LinkBtn}" HorizontalAlignment="Right" Click="TaskAdd_Click">
+                <TextBlock x:Name="TaskAddText" FontWeight="SemiBold"/>
+              </Button>
+            </Grid>
+            <Border x:Name="EventRow" Grid.Row="1" Visibility="Collapsed"/>
+            <StackPanel x:Name="TaskList" Grid.Row="2" Margin="0,6,0,0"/>
+            <Border x:Name="TaskInputRow" Grid.Row="3" Margin="0,6,0,0" Height="30" CornerRadius="10" Background="{DynamicResource Chip}" Padding="10,0" Visibility="Collapsed">
+              <Grid>
+                <TextBlock x:Name="TaskHint" FontSize="12" Foreground="{DynamicResource Faint}" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
+                <TextBox x:Name="TaskInput" FontSize="12.5" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Fg}" CaretBrush="{DynamicResource Fg}"
+                         VerticalAlignment="Center" Padding="0" MaxLength="140" PreviewMouseDown="TaskInput_PreviewMouseDown" KeyDown="TaskInput_KeyDown" TextChanged="TaskInput_TextChanged"/>
+              </Grid>
+            </Border>
           </Grid>
 
           <!-- ===== Вода: пруд с рыбкой-кои (или капля, если рыбка выключена) ===== -->
