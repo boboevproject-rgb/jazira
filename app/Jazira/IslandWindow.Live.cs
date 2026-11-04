@@ -35,6 +35,7 @@ public partial class IslandWindow
         _media.TrackChanged += OnTrackChanged;
         _power.Changed += RefreshIdle;
         _power.PlugChanged += OnPlugChanged;
+        _power.Changed += CheckLowBattery;
         _focus.Finished += OnFocusFinished;
         _lyrics.Changed += OnLyricsChanged;
         _local.Changed += RefreshLocal;
@@ -395,6 +396,10 @@ public partial class IslandWindow
                 ShowPeek("koi", Res("Amber"), FishGeo, Strings.Get("koi.new.sanke"), KoiLineText(st), seconds: 5); });
             yield return ($"{lang}-peek-koi-saved", () => { Base(lang); Collapse();
                 ShowPeek("koi", Res("Coral"), FishGeo, Strings.Get("koi.saved"), "koi-2026-11-04.png", seconds: 8, action: Strings.Get("koi.open"), onAction: () => { }); });
+            yield return ($"{lang}-sys", () => { Base(lang); _sysmon.Fake(0.23, 0.61, 16UL << 30, 1_258_291, 40_960, null, false, new BatteryHealth.Info(50_000, 42_367, 0)); Expand("sys"); });
+            yield return ($"{lang}-sys-hot", () => { Base(lang); _sysmon.Fake(0.96, 0.91, 8UL << 30, 0, 0, 87.4, true, new BatteryHealth.Info(57_000, 31_200, 612)); Expand("sys"); });
+            yield return ($"{lang}-sys-desktop", () => { Base(lang); _power.Fake(false, true, 100); _sysmon.Fake(0.07, 0.33, 32UL << 30, null, null, 41.2, false, null); Expand("sys"); });
+            yield return ($"{lang}-peek-battery", () => { Base(lang); Collapse(); _power.Fake(true, false, 10); _lowWarned = false; CheckLowBattery(); });
             yield return ($"{lang}-local", () => { Base(lang); st.Prayer = true; _local.Fake(16.4, 1, 9.2122m, 0.11372m); Expand("local"); });
             yield return ($"{lang}-peek-charge", () => { Base(lang); Collapse(); _power.Fake(true, true, 78); OnPlugChanged(true); });
             yield return ($"{lang}-peek-track", () => { Base(lang); Collapse(); Track(true); ShowTrackPeek(); });

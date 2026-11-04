@@ -74,6 +74,7 @@ static class Snapshot
         FolderWatchSelfTest(sb);
         FolderWatchLiveTest(sb);
         CaptureSelfTest(sb);
+        SysSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
     }
 
@@ -123,6 +124,22 @@ static class Snapshot
         }
         finally { try { Directory.Delete(dir, true); } catch (Exception) { } }
         sb.AppendLine($"files: {(fails == 0 ? "all ok" : fails + " FAILED")}");
+    }
+
+    // «Система» на этом компьютере: что Windows отдаёт без прав администратора
+    static void SysSelfTest(System.Text.StringBuilder sb)
+    {
+        var m = new SysMonitor();
+        m.SampleCpu();
+        System.Threading.Thread.Sleep(300);
+        m.SampleCpu();
+        m.SampleMemory();
+        m.SampleNetwork();
+        sb.AppendLine($"sys cpu {(m.Cpu >= 0 ? "ok  " : "FAIL")} {m.Cpu:P0}");
+        sb.AppendLine($"sys mem {(m.MemTotal > 0 ? "ok  " : "FAIL")} {m.MemUsed / 1073741824.0:0.0} of {m.MemTotal / 1073741824.0:0.0} GiB");
+        var b = BatteryHealth.Read();
+        sb.AppendLine(b == null ? "sys battery: not reported (desktop or no driver data)"
+                                : $"sys battery ok   designed {b.DesignedMWh} mWh, full {b.FullMWh} mWh, wear {b.Wear:P0}, cycles {b.Cycles}");
     }
 
     // Настоящее слежение за папкой: как пишут файлы Chrome (Unconfirmed → .crdownload → имя) и Firefox
@@ -199,6 +216,8 @@ static class Snapshot
             using var keys = new HotKeys(src.Handle);
             bool free = keys.Set("probe", HotKeys.Ctrl, 0x2C, () => { });
             sb.AppendLine($"hotkey Ctrl+PrtScn: {(free ? "free" : "taken by another app")}");
+            bool islandFree = keys.Set("probe2", HotKeys.Ctrl | HotKeys.Alt, 0x4A, () => { });
+            sb.AppendLine($"hotkey Ctrl+Alt+J: {(islandFree ? "free" : "taken by another app")}");
         }
         finally { src.Dispose(); }
     }

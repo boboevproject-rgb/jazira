@@ -40,6 +40,8 @@ public sealed class AppState
     public bool DayPage { get; set; } = true;
     public bool DownloadsToShelf { get; set; } = true;  // новый файл в «Загрузках» — сам на полку
     public bool ShotsToShelf { get; set; } = true;      // снимки экрана — на полку; Ctrl+PrtScn снимает экран
+    public bool SysPage { get; set; } = true;           // страница «Система»
+    public bool LowBattery { get; set; } = true;        // предупредить, когда батарея 10 %
     public string? CalendarUrl { get; set; }   // секретная iCal-ссылка Google или Outlook — только здесь, в журнал не пишется
     public bool Ramadan { get; set; } = true;  // в месяц Рамазан — отсчёт до ифтара и сухура
     public List<TaskItem> Tasks { get; set; } = new();

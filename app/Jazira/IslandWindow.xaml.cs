@@ -20,7 +20,7 @@ namespace Jazira;
 public partial class IslandWindow : Window
 {
     enum Mode { Idle, Expanded, Peek }
-    static readonly string[] AllPages = { "music", "day", "shelf", "focus", "water", "local" };
+    static readonly string[] AllPages = { "music", "day", "shelf", "focus", "water", "local", "sys" };
     static readonly Size IdleBase = new(196, 34);
 
     static Geometry G(string d) { var g = Geometry.Parse(d); g.Freeze(); return g; }
@@ -104,7 +104,9 @@ public partial class IslandWindow : Window
         _sys = new SystemWatch(Dispatcher);
         WireFiles();
         SourceInitialized += (_, _) => { MakeToolWindow(); StartHotKeys(); };
-        Deactivated += (_, _) => { if (_typing) EndTyping(hide: false); }; // кликнули мимо — клавиатура снова ваша
+        // Кликнули мимо — клавиатура снова ваша; остров, открытый клавишей, закрывается
+        Deactivated += (_, _) => { if (_keyOpen) Collapse(); else if (_typing) EndTyping(hide: false); };
+        PreviewKeyDown += Island_PreviewKeyDown;
         Loaded += (_, _) => { ApplyScale(); Place(); };
         DpiChanged += (_, _) => { if (!_dragging) Dispatcher.InvokeAsync(Place, DispatcherPriority.Background); };
         SystemEvents.DisplaySettingsChanged += (_, _) => Dispatcher.InvokeAsync(Place);
@@ -128,7 +130,8 @@ public partial class IslandWindow : Window
 
     // ---- Покой, раскрытие, страницы ------------------------------------------------------------
 
-    string[] Pages => AllPages.Where(p => (p != "local" || AppState.Current.LocalPage) && (p != "day" || AppState.Current.DayPage)).ToArray();
+    string[] Pages => AllPages.Where(p => (p != "local" || AppState.Current.LocalPage) && (p != "day" || AppState.Current.DayPage)
+                                          && (p != "sys" || AppState.Current.SysPage)).ToArray();
     string PageName => Pages[Math.Clamp(_page, 0, Pages.Length - 1)];
     bool HasTrack => _media.HasSession && _media.Title.Length > 0;
 
@@ -141,6 +144,7 @@ public partial class IslandWindow : Window
         {
             _lastMinute = now.Minute;
             _power.Read();
+            CheckLowBattery();
             RefreshWater(); // новый день — счётчик с нуля; и вода в пруду рыбки понемногу мелеет
             CheckWaterReminder(now);
             if (_mode == Mode.Expanded && PageName == "day" && !_typing) RefreshDay(); // время задач «краснеет» вовремя
@@ -150,6 +154,7 @@ public partial class IslandWindow : Window
             _downloads?.EnsureStarted(); // папки «Снимки экрана» могло не быть — вдруг появилась
             _shots?.EnsureStarted();
         }
+        SysTick();
         CheckTasks(now);
         CheckTimers(now);
         CheckCalendar(now);
@@ -210,6 +215,7 @@ public partial class IslandWindow : Window
         _peekKind = "";
         _peekAction = null;
         NavLayer.Visibility = Visibility.Visible;
+        if (PageName == "sys") SysOpened();
         ShowPanel(PanelOf(PageName));
         RefreshAll();
         AnimateTo(PageSize());
@@ -222,6 +228,7 @@ public partial class IslandWindow : Window
         "shelf" => ShelfPanel,
         "focus" => FocusPanel,
         "water" => WaterPanel,
+        "sys" => SysPanel,
         _ => LocalPanel,
     };
 
@@ -230,6 +237,7 @@ public partial class IslandWindow : Window
         "music" => !HasTrack ? new Size(420, 96) : LyricBlock.Visibility == Visibility.Visible ? new Size(420, 194) : new Size(420, 150),
         "shelf" => new Size(420, 122),
         "day" => DaySize(),
+        "sys" => SysSize(),
         "focus" => new Size(420, 150),
         "water" => new Size(440, 118),
         "local" => new Size(AppState.Current.Prayer ? 460 : 400, 112),
@@ -238,7 +246,10 @@ public partial class IslandWindow : Window
 
     void Collapse()
     {
-        if (_typing) EndTyping(hide: false);
+        bool key = _keyOpen;
+        _keyOpen = false;
+        if (_typing) EndTyping(hide: false); // клавиатура вернётся вашему окну
+        else if (key) ReleaseKeyboard();
         _mode = Mode.Idle;
         _peekKind = "";
         _peekAction = null;
@@ -283,7 +294,7 @@ public partial class IslandWindow : Window
 
     void ShowPanel(FrameworkElement target)
     {
-        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, DayPanel, ShelfPanel, FocusPanel, WaterPanel, LocalPanel, PeekPanel })
+        foreach (var p in new FrameworkElement[] { IdlePanel, MusicPanel, DayPanel, ShelfPanel, FocusPanel, WaterPanel, LocalPanel, SysPanel, PeekPanel })
         {
             if (p == target) continue;
             p.BeginAnimation(OpacityProperty, null);
@@ -392,6 +403,7 @@ public partial class IslandWindow : Window
         RefreshTimers();
         RefreshWater();
         RefreshLocal();
+        RefreshSys();
     }
 
     void RefreshIdle()

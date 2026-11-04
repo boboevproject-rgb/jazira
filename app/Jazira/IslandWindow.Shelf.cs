@@ -248,6 +248,7 @@ public partial class IslandWindow
     void ApplyHotKeys()
     {
         if (_keys == null) return;
+        ApplyIslandKey();
         if (AppState.Current.ShotsToShelf) ShotKeyOk = _keys.Set("shot", HotKeys.Ctrl, VK_SNAPSHOT, TakeScreenshot);
         else { _keys.Remove("shot"); ShotKeyOk = true; }
     }

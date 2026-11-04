@@ -268,6 +268,21 @@
             </Grid>
           </Grid>
 
+          <!-- ===== Система ===== -->
+          <Grid x:Name="SysPanel" Margin="34,10,34,10" Visibility="Collapsed" Opacity="0">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <TextBlock x:Name="SysTitle" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+              <TextBlock x:Name="SysUptime" FontSize="11" Foreground="{DynamicResource Faint}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
+            <UniformGrid x:Name="SysTiles" Grid.Row="1" Columns="4" Rows="1" Margin="0,8,0,0"/>
+            <TextBlock x:Name="SysBattery" Grid.Row="2" FontSize="11" Foreground="{DynamicResource Dim}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/>
+          </Grid>
+
           <!-- ===== Фокус ===== -->
           <Grid x:Name="FocusPanel" Margin="36,12,36,12" Visibility="Collapsed" Opacity="0">
             <Grid.RowDefinitions>

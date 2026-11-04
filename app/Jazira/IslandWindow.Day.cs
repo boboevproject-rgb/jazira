@@ -376,18 +376,18 @@ public partial class IslandWindow
         if (_hwnd == IntPtr.Zero) return;
         _typing = true;
         _hoverOut.Stop();
-        Native.SetWindowLong(_hwnd, Native.GWL_EXSTYLE, Native.GetWindowLong(_hwnd, Native.GWL_EXSTYLE) & ~Native.WS_EX_NOACTIVATE);
-        Activate();
+        TakeKeyboard();
         TaskInput.Focus();
         Keyboard.Focus(TaskInput);
     }
 
     void EndTyping(bool hide)
     {
-        if (_typing && _hwnd != IntPtr.Zero)
-            Native.SetWindowLong(_hwnd, Native.GWL_EXSTYLE, Native.GetWindowLong(_hwnd, Native.GWL_EXSTYLE) | Native.WS_EX_NOACTIVATE);
+        bool was = _typing;
         _typing = false;
-        Keyboard.ClearFocus();
+        if (was && _keyOpen) Focus();         // остров открыт клавишей — стрелки и Esc продолжают работать
+        else if (was) ReleaseKeyboard();      // клавиатура — обратно в окно, где вы были
+        else Keyboard.ClearFocus();
         if (hide || TaskInput.Text.Length == 0)
         {
             TaskInput.Clear();

@@ -58,6 +58,7 @@ sealed class TrayIcon : IDisposable
             menu.Items.Add(Item(Strings.Format("tray.install", ready), _app.ApplyUpdate));
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add(Item(Strings.Get("tray.show"), ToggleIsland, st.ShowIsland));
+        menu.Items.Add(Item(_island.IslandKeyMenuText(), _island.OpenByKey));
 
         var look = new Forms.ToolStripMenuItem(Strings.Get("tray.look"));
         foreach (var t in Theme.All)
@@ -99,6 +100,8 @@ sealed class TrayIcon : IDisposable
         features.DropDownItems.Add(Item(Strings.Get("f.ramadan"), () => Set(() => st.Ramadan = !st.Ramadan), st.Ramadan));
         features.DropDownItems.Add(Item(Strings.Get("f.downloads"), () => Set(() => st.DownloadsToShelf = !st.DownloadsToShelf), st.DownloadsToShelf));
         features.DropDownItems.Add(Item(_island.ShotsMenuText(), () => Set(() => st.ShotsToShelf = !st.ShotsToShelf), st.ShotsToShelf));
+        features.DropDownItems.Add(Item(Strings.Get("f.sys"), () => Set(() => st.SysPage = !st.SysPage), st.SysPage));
+        features.DropDownItems.Add(Item(Strings.Get("f.lowBattery"), () => Set(() => st.LowBattery = !st.LowBattery), st.LowBattery));
         features.DropDownItems.Add(Item(Strings.Get("f.local"), () => Set(() => st.LocalPage = !st.LocalPage), st.LocalPage));
         features.DropDownItems.Add(Item(Strings.Get("f.prayer"), () => Set(() => st.Prayer = !st.Prayer), st.Prayer));
         menu.Items.Add(features);
