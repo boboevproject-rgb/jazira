@@ -92,6 +92,7 @@ public partial class IslandWindow : Window
         NavLeftIcon.Data = LeftGeo; NavRightIcon.Data = RightGeo;
         ProgTrack.SizeChanged += (_, _) => RefreshMusicProgress();
         WaterTrack.SizeChanged += (_, _) => RefreshWater();
+        ShadeHost.SizeChanged += (_, _) => UpdateCorners(Island.RenderSize); // сменили масштаб — вырез тени на новое место
         ApplyLook();
         RefreshAll();
         if (snapshot) return;

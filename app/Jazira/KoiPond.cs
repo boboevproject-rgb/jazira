@@ -32,6 +32,18 @@ sealed class KoiPond : FrameworkElement
     readonly List<(Point P, double R, double Born)> _bubbles = new();
     double _phase, _last, _swim, _splashUntil = -1, _nextBubble;
 
+    // Экран заблокирован — рыбку никто не видит, кадры не рисуем
+    static bool _locked;
+
+    static KoiPond()
+    {
+        Microsoft.Win32.SystemEvents.SessionSwitch += (_, e) =>
+        {
+            if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock) _locked = true;
+            else if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionUnlock) _locked = false;
+        };
+    }
+
     public KoiPond()
     {
         _timer.Tick += (_, _) => Step();
@@ -60,9 +72,7 @@ sealed class KoiPond : FrameworkElement
     {
         double now = Now, dt = Math.Min(0.1, now - _last);
         _last = now;
-        // Маленькая рыбка то плывёт, то замирает — как настоящая; пока замерла, остров не перерисовывается.
-        // Если за компьютером никого нет больше минуты, рыбка спит.
-        if (Compact && now >= _splashUntil && (now % 20 > 5 || Native.IdleSeconds() > 60)) return;
+        if (_locked) return;
         Advance(now, dt);
         InvalidateVisual();
     }
@@ -70,8 +80,10 @@ sealed class KoiPond : FrameworkElement
     void Advance(double now, double dt)
     {
         bool splash = now < _splashUntil;
-        _phase += dt * (0.35 + 0.75 * Energy + (splash ? 1.3 : 0));
-        _swim += dt * (4 + 6 * Energy + (splash ? 6 : 0)); // взмахи хвоста
+        // Рыбка никогда не стоит: то разгоняется, то скользит — два медленных колебания дают «живой» ритм
+        double glide = 0.55 + 0.45 * (0.5 + 0.5 * Math.Sin(now * 0.37) * Math.Sin(now * 0.23 + 1));
+        _phase += dt * glide * (0.35 + 0.75 * Energy + (splash ? 1.3 : 0));
+        _swim += dt * (0.6 + 0.4 * glide) * (4 + 6 * Energy + (splash ? 6 : 0)); // взмахи хвоста
         _levelShown += (_level - _levelShown) * Math.Min(1, dt * 2.5);
 
         var head = Head();

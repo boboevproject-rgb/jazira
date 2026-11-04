@@ -123,6 +123,11 @@
   <!-- Окно прозрачное: сквозь пустые места клики проходят к окнам под ним -->
   <Grid x:Name="Root">
     <Grid x:Name="ScaleHost">
+      <!-- Тень — отдельным слоем под островом и без эффекта размытия (см. SoftShadow.cs).
+           Внутренность слоя вырезана (Clip), поэтому сквозь полупрозрачный остров его не видно. -->
+      <Grid x:Name="ShadeHost" IsHitTestVisible="False">
+        <local:SoftShadow x:Name="Glow"/>
+      </Grid>
       <Border x:Name="Island" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
               Width="196" Height="34" CornerRadius="17" Background="{DynamicResource IslandBg}"
               BorderBrush="{DynamicResource IslandBorder}" BorderThickness="1" AllowDrop="True"
@@ -132,9 +137,6 @@
               MouseRightButtonUp="Island_MouseRightButtonUp"
               DragEnter="Island_DragEnter" DragOver="Island_DragOver" DragLeave="Island_DragLeave" Drop="Island_Drop"
               SizeChanged="Island_SizeChanged">
-        <Border.Effect>
-          <DropShadowEffect x:Name="Glow" BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.45" Color="Black"/>
-        </Border.Effect>
 
         <Grid x:Name="Body">
 

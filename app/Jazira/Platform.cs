@@ -30,16 +30,6 @@ static class Native
     [DllImport("user32.dll")] public static extern short GetKeyState(int key);
     [DllImport("user32.dll")] static extern IntPtr MonitorFromPoint(POINT pt, uint flags);
     [DllImport("shcore.dll")] static extern int GetDpiForMonitor(IntPtr monitor, int type, out uint dpiX, out uint dpiY);
-    [StructLayout(LayoutKind.Sequential)] struct LASTINPUTINFO { public uint Size, Time; }
-    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
-
-    // Сколько секунд к клавиатуре и мыши никто не прикасался
-    public static double IdleSeconds()
-    {
-        var info = new LASTINPUTINFO { Size = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
-        return GetLastInputInfo(ref info) ? (uint)(Environment.TickCount - (int)info.Time) / 1000.0 : 0;
-    }
-
     // Масштаб экрана (1 = 100 %) монитора, на котором лежит точка в физических пикселях
     public static double ScaleAt(int x, int y)
     {

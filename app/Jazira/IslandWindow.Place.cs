@@ -4,7 +4,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
 using Forms = System.Windows.Forms;
 
 namespace Jazira;
@@ -183,20 +182,35 @@ public partial class IslandWindow
         var inner = new Size(Math.Max(0, size.Width - 2), Math.Max(0, size.Height - (Notch ? 1 : 2)));
         Body.Clip = Notch ? BottomRounded(inner, Math.Max(0, r - 1))
                           : new RectangleGeometry(new Rect(inner), Math.Max(0, r - 1), Math.Max(0, r - 1));
+        UpdateShade(size, r);
     }
 
-    static Geometry BottomRounded(Size s, double r)
+    // Тень повторяет остров по размеру и форме, а сам остров в слое тени вырезан
+    void UpdateShade(Size size, double r)
+    {
+        double hostW = ShadeHost.ActualWidth, hostH = ShadeHost.ActualHeight;
+        if (hostW <= 0 || size.Width <= 0) return;
+        var at = new Point((hostW - size.Width) / 2, Island.Margin.Top);
+        Glow.SetShape(new Rect(at, size), r, Notch);
+        Geometry hole = Notch ? BottomRounded(size, r, at) : new RectangleGeometry(new Rect(at, size), r, r);
+        var clip = new CombinedGeometry(GeometryCombineMode.Exclude, new RectangleGeometry(new Rect(0, 0, hostW, hostH)), hole);
+        clip.Freeze();
+        ShadeHost.Clip = clip;
+    }
+
+    static Geometry BottomRounded(Size s, double r, Point at = default)
     {
         r = Math.Min(r, Math.Min(s.Width, s.Height) / 2);
+        double x = at.X, y = at.Y;
         var g = new StreamGeometry();
         using (var c = g.Open())
         {
-            c.BeginFigure(new Point(0, 0), true, true);
-            c.LineTo(new Point(s.Width, 0), false, false);
-            c.LineTo(new Point(s.Width, s.Height - r), false, false);
-            c.ArcTo(new Point(s.Width - r, s.Height), new Size(r, r), 0, false, SweepDirection.Clockwise, false, false);
-            c.LineTo(new Point(r, s.Height), false, false);
-            c.ArcTo(new Point(0, s.Height - r), new Size(r, r), 0, false, SweepDirection.Clockwise, false, false);
+            c.BeginFigure(new Point(x, y), true, true);
+            c.LineTo(new Point(x + s.Width, y), false, false);
+            c.LineTo(new Point(x + s.Width, y + s.Height - r), false, false);
+            c.ArcTo(new Point(x + s.Width - r, y + s.Height), new Size(r, r), 0, false, SweepDirection.Clockwise, false, false);
+            c.LineTo(new Point(x + r, y + s.Height), false, false);
+            c.ArcTo(new Point(x, y + s.Height - r), new Size(r, r), 0, false, SweepDirection.Clockwise, false, false);
         }
         g.Freeze();
         return g;
@@ -233,26 +247,28 @@ public partial class IslandWindow
             Island.BorderBrush = b;
         }
         AnimateColor(b, SolidColorBrush.ColorProperty, border);
-        AnimateColor(Glow, DropShadowEffect.ColorProperty, c ?? Colors.Black);
-        AnimateNumber(Glow, DropShadowEffect.OpacityProperty, c != null ? 0.62 : theme.ShadowOpacity);
-        AnimateNumber(Glow, DropShadowEffect.BlurRadiusProperty, c != null ? 24 : 14);
-        AnimateNumber(Glow, DropShadowEffect.ShadowDepthProperty, c != null ? 0 : 3);
+        AnimateColor(Glow, SoftShadow.ColorProperty, c ?? Colors.Black);
+        AnimateNumber(Glow, SoftShadow.StrengthProperty, c != null ? 0.42 : theme.ShadowOpacity);
+        AnimateNumber(Glow, SoftShadow.SpreadProperty, c != null ? 20 : 13);
+        AnimateNumber(Glow, SoftShadow.DepthProperty, c != null ? 0 : 3);
 
         Resources["EqFill"] = c is Color e ? Theme.Brush(e) : Res("Lagoon");
         Resources["ProgFill"] = c is Color p ? Theme.Brush(p) : Res("Fg");
         Resources["LyricFg"] = c is Color l && !theme.Light ? Theme.Brush(CoverColor.Lighten(l, 0.35)) : Res("Fg");
     }
 
-    void AnimateColor(Animatable target, DependencyProperty prop, Color to)
+    void AnimateColor(DependencyObject target, DependencyProperty prop, Color to)
     {
-        if (_instant) { target.BeginAnimation(prop, null); target.SetValue(prop, to); }
-        else target.BeginAnimation(prop, new ColorAnimation(to, TimeSpan.FromMilliseconds(700)));
+        var a = (IAnimatable)target;
+        if (_instant) { a.BeginAnimation(prop, null); target.SetValue(prop, to); }
+        else a.BeginAnimation(prop, new ColorAnimation(to, TimeSpan.FromMilliseconds(700)));
     }
 
-    void AnimateNumber(Animatable target, DependencyProperty prop, double to)
+    void AnimateNumber(DependencyObject target, DependencyProperty prop, double to)
     {
-        if (_instant) { target.BeginAnimation(prop, null); target.SetValue(prop, to); }
-        else target.BeginAnimation(prop, new DoubleAnimation(to, TimeSpan.FromMilliseconds(700)));
+        var a = (IAnimatable)target;
+        if (_instant) { a.BeginAnimation(prop, null); target.SetValue(prop, to); }
+        else a.BeginAnimation(prop, new DoubleAnimation(to, TimeSpan.FromMilliseconds(700)));
     }
 
     // ---- Настройки из меню ------------------------------------------------------------------------
