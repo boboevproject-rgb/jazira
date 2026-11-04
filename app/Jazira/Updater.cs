@@ -27,6 +27,14 @@ static class Updater
 
     public static Version Current => Version.Parse(App.Version);
 
+    // Поставлено через winget: портативный пакет лежит в ...\WinGet\Packages\ и запускается через ссылку
+    // в ...\WinGet\Links\. Тогда обновляет winget — подмена файла на месте запутала бы его в версиях.
+    public static bool ByWinget => IsWingetPath(Environment.ProcessPath);
+
+    internal static bool IsWingetPath(string? path) =>
+        path != null && (path.Contains(@"\WinGet\Packages\", StringComparison.OrdinalIgnoreCase)
+                      || path.Contains(@"\WinGet\Links\", StringComparison.OrdinalIgnoreCase));
+
     public static async Task<UpdateInfo?> CheckAsync()
     {
         using var doc = JsonDocument.Parse(await Net.Http.GetStringAsync(Api));

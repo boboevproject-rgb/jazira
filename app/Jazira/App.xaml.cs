@@ -103,6 +103,11 @@ public partial class App : Application
     public async void CheckUpdates(bool manual)
     {
         if (_updateBusy || _island == null) return;
+        if (Updater.ByWinget)
+        {
+            if (manual) _island.ShowInfo(Strings.Get("update.winget"));
+            return;
+        }
         _updateBusy = true;
         try
         {

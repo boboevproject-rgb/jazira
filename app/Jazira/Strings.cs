@@ -149,6 +149,7 @@ static class Strings
         ["update.btn"] = new[] { "Обновить", "Update", "Навсозӣ" },
         ["update.done"] = new[] { "Jazira обновлена до {0}", "Updated to Jazira {0}", "Jazira то {0} навсозӣ шуд" },
         ["update.latest"] = new[] { "У вас последняя версия", "You're up to date", "Версияи охирин насб аст" },
+        ["update.winget"] = new[] { "Обновления — через winget", "Updates come via winget", "Навсозӣ — тавассути winget" },
         ["update.fail"] = new[] { "Не удалось проверить обновления", "Couldn't check for updates", "Навсозиро санҷида нашуд" },
 
         ["tray.show"] = new[] { "Показывать остров", "Show the island", "Нишон додани ҷазира" },

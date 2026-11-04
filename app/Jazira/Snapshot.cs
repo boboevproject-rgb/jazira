@@ -153,7 +153,28 @@ static class Snapshot
         FolderWatchLiveTest(sb);
         CaptureSelfTest(sb);
         SysSelfTest(sb);
+        WingetSelfTest(sb);
         File.WriteAllText(path, sb.ToString());
+    }
+
+    // Установка через winget: тогда сами не обновляемся (обновляет winget)
+    static void WingetSelfTest(System.Text.StringBuilder sb)
+    {
+        var cases = new (string? Path, bool Want)[]
+        {
+            (@"C:\Users\a\AppData\Local\Microsoft\WinGet\Packages\Bilol.Jazira_Microsoft.Winget.Source_8wekyb3d8bbwe\Jazira.exe", true),
+            (@"C:\Users\a\AppData\Local\Microsoft\WinGet\Links\jazira.exe", true),
+            (@"C:\Program Files\WinGet\Packages\Bilol.Jazira_Microsoft.Winget.Source_8wekyb3d8bbwe\Jazira.exe", true),
+            (@"C:\Users\a\AppData\Local\Programs\Jazira\Jazira.exe", false),
+            (@"D:\Tools\winget-stuff\Jazira.exe", false),
+            (null, false),
+        };
+        foreach (var (p, want) in cases)
+        {
+            bool got = Updater.IsWingetPath(p);
+            sb.AppendLine($"winget {(got == want ? "ok  " : "FAIL")} {p ?? "(null)"}: {got}");
+        }
+        sb.AppendLine($"winget: this copy {(Updater.ByWinget ? "is" : "is not")} a winget install");
     }
 
     // Скачанное: какие имена браузеры дают недокачанным файлам и когда файл считается готовым
