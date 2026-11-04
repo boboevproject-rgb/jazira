@@ -15,6 +15,7 @@
 Скачать: **[все релизы](https://github.com/boboevproject-rgb/jazira/releases)**. В 0.3 — рыбка-питомец,
 «Мой день» с задачами, таймерами и встречей из календаря, скачанное и снимки экрана на полке,
 страница «Система», Ctrl+Alt+J, а памяти остров берёт примерно вдвое меньше (около 160 МБ вместо 300).
+В 0.3.1 — автоскрытие: остров прячется за верхний край и выезжает, когда к нему подводят курсор.
 
 ![Jazira](assets/og.png)
 
@@ -135,7 +136,8 @@ no build step, no dependencies. Licensed under [MIT](LICENSE).
 **Live site: https://boboevproject-rgb.github.io/jazira/** · **The Windows app** lives in
 [`app/`](app/README.md). Download: **[releases](https://github.com/boboevproject-rgb/jazira/releases)**
 (0.3: a koi pet, "My day" with tasks, timers and the next meeting, downloads and screenshots on the shelf,
-a System page, Ctrl+Alt+J, and about half the memory: about 160 MB instead of 300).
+a System page, Ctrl+Alt+J, and about half the memory: about 160 MB instead of 300;
+0.3.1: auto-hide — the island tucks behind the top edge and slides back when you point at it).
 
 ### Quick start
 
